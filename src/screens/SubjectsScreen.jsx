@@ -121,6 +121,86 @@ const SubjectsScreen = ({ navigation }) => {
     }
   ];
 
+  const mapCarreras =  [
+    { id: 1, nombre: 'Sistemas' },
+    { id: 2, nombre: 'Química' },
+    { id: 3, nombre: 'Mecánica' },
+    { id: 4, nombre: 'Civil' },
+    { id: 5, nombre: 'Industrial' },
+    { id: 6, nombre: 'Eléctrica' }
+  ]
+
+  const comisionesSistemas = [
+    'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S21', 'S22', 'S23', 'S24', 'S31', 'S32', 'S33', 'S41', 'S51'
+  ]
+  
+  const comisionesQuimica = [
+    'Q11', 'Q21', 'Q31', 'Q41', 'Q51'
+  ]
+  
+  const comisionesCivil = [
+    'C11', 'C12', 'C21', 'C31', 'C41', 'C51'
+  ]
+  
+  const comisionesMecanica = [
+    'M11', 'M12', 'M21', 'M22', 'M31', 'M41', 'M51'
+  ]
+  
+  const comisionesIndustrial = [
+    'I11', 'I12', 'I21', 'I22', 'I31', 'I41', 'I51'
+  ]
+  
+  const comisionesElectrica = [
+    'E11', 'E21', 'E31', 'E41', 'E51'
+  ]
+
+  // Función para obtener comisiones según carrera y año
+const getComisionesByCarreraYAnio = (carrera, anio) => {
+  const anioNum = parseInt(anio);
+
+  switch (carrera){
+    case 1:
+      const filtrados = comisionesSistemas.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+      return filtrados;
+    
+    case 2:
+      return comisionesQuimica.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+    
+    case 3:
+      return comisionesCivil.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+    
+    case 4:
+      return comisionesMecanica.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+    
+    case 5:
+      return comisionesIndustrial.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+    
+    case 6:
+      return comisionesElectrica.filter(comision => {
+        const primerDigito = parseInt(comision.charAt(1));
+        return primerDigito === anioNum;
+      });
+    
+    default:
+      return [];
+  }
+};
+
   // Función para navegar a Home
   const goToHome = () => {
     clearInactivityTimer();
@@ -143,8 +223,9 @@ const SubjectsScreen = ({ navigation }) => {
 
   // Seleccionar opción
   const handleSelect = (value) => {
-    handleUserActivity(); // Resetear timer al seleccionar
-    
+    handleUserActivity(); // Resetear timer al selecciona
+    console.log('Valor recibido en handleSelect:', value);
+
     switch (currentModal) {
       case 'carrera':
         setSelectedCarrera(value);
@@ -180,9 +261,9 @@ const SubjectsScreen = ({ navigation }) => {
   // Obtener opciones según el modal actual
   const getCurrentOptions = () => {
     switch (currentModal) {
-      case 'carrera': return carreras;
+      case 'carrera': return mapCarreras;
       case 'anio': return anios;
-      case 'comision': return comisiones;
+      case 'comision': return getComisionesByCarreraYAnio(selectedCarrera, selectedAnio);;
       default: return [];
     }
   };
@@ -206,6 +287,13 @@ const SubjectsScreen = ({ navigation }) => {
       default: return null;
     }
   };
+
+    // Función para obtener el nombre de la carrera seleccionada para mostrar
+    const getSelectedCarreraName = () => {
+      if (!selectedCarrera) return 'Seleccionar carrera';
+      const carrera = mapCarreras.find(c => c.id === selectedCarrera);
+      return carrera ? carrera.nombre : 'Seleccionar carrera';
+    };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -238,7 +326,7 @@ const SubjectsScreen = ({ navigation }) => {
               styles.selectButtonText,
               selectedCarrera && styles.selectButtonTextSelected
             ]}>
-              {selectedCarrera || 'Seleccionar carrera'}
+              {getSelectedCarreraName()}
             </Text>
           </TouchableOpacity>
 

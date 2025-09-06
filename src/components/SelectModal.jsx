@@ -31,20 +31,26 @@ const SelectModal = ({
           
           <FlatList
             data={options}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item, index) => {
+              return item.id ? item.id.toString() : index.toString();
+            }}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[
                   styles.optionItem,
-                  selectedValue === item && styles.optionItemSelected
+                  selectedValue && (
+                    item.id ? selectedValue.id === item.id : selectedValue === item
+                  ) && styles.optionItemSelected
                 ]}
-                onPress={() => onSelect(item)}
+                onPress={() => onSelect(item.id || item)} // Pasar solo el ID o el valor
               >
                 <Text style={[
                   styles.optionText,
-                  selectedValue === item && styles.optionTextSelected
+                  selectedValue && (
+                    item.id ? selectedValue.id === item.id : selectedValue === item
+                  ) && styles.optionTextSelected
                 ]}>
-                  {item}
+                  {item.nombre || item} {/* Mostrar nombre si es objeto, o el valor si es string */}
                 </Text>
               </TouchableOpacity>
             )}
