@@ -79,9 +79,16 @@ const SubjectsScreen = ({ navigation }) => {
     switch (currentModal) {
       case 'carrera':
         setSelectedCarrera(value);
+        // Resetear año y comisión cuando cambia la carrera
+        setSelectedAnio(null);
+        setSelectedComision(null);
+        setShowMaterias(null);
         break;
       case 'anio':
         setSelectedAnio(value);
+        // Resetear comisión cuando cambia el año
+        setSelectedComision(null);
+        setShowMaterias(null);
         break;
       case 'comision':
         setSelectedComision(value);
@@ -163,12 +170,17 @@ const SubjectsScreen = ({ navigation }) => {
           {/* Select de Año */}
           <Text style={styles.sectionTitle}>Año</Text>
           <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => openModal('anio')}
+            style={[
+              styles.selectButton,
+              !selectedCarrera && styles.selectButtonDisabled
+            ]}
+            onPress={() => selectedCarrera && openModal('anio')}
+            disabled={!selectedCarrera}
           >
             <Text style={[
               styles.selectButtonText,
-              selectedAnio && styles.selectButtonTextSelected
+              selectedAnio && styles.selectButtonTextSelected,
+              !selectedCarrera && styles.selectButtonTextDisabled
             ]}>
               {selectedAnio || 'Seleccionar año'}
             </Text>
@@ -177,12 +189,17 @@ const SubjectsScreen = ({ navigation }) => {
           {/* Select de Comisión */}
           <Text style={styles.sectionTitle}>Comisión</Text>
           <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => openModal('comision')}
+            style={[
+              styles.selectButton,
+              (!selectedCarrera || !selectedAnio) && styles.selectButtonDisabled
+            ]}
+            onPress={() => selectedCarrera && selectedAnio && openModal('comision')}
+            disabled={!selectedCarrera || !selectedAnio}
           >
             <Text style={[
               styles.selectButtonText,
-              selectedComision && styles.selectButtonTextSelected
+              selectedComision && styles.selectButtonTextSelected,
+              (!selectedCarrera || !selectedAnio) && styles.selectButtonTextDisabled
             ]}>
               {selectedComision || 'Seleccionar comisión'}
             </Text>

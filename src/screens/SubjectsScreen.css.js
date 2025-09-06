@@ -79,6 +79,15 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: 'bold',
   },
+  selectButtonDisabled: {
+    backgroundColor: COLORS.grayLight,
+    borderColor: COLORS.border,
+    opacity: 0.5,
+  },
+  selectButtonTextDisabled: {
+    color: COLORS.gray,
+    opacity: 0.5,
+  },
   buscarButton: {
     padding: 15,
     backgroundColor: COLORS.primary,
