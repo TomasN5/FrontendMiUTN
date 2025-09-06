@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
   SafeAreaView, 
   StatusBar,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  AppState
 } from 'react-native';
 
 // Importar componentes
@@ -21,6 +22,69 @@ const SubjectsScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentModal, setCurrentModal] = useState(null);
   const [showMaterias, setShowMaterias] = useState(false);
+
+  // Referencias para el timer de inactividad
+  const inactivityTimer = useRef(null);
+  const appState = useRef(AppState.currentState);
+
+  // Configuración del timeout (1 minuto = 60,000 ms)
+  const INACTIVITY_TIMEOUT = 60 * 3000; // 3 minutos en milisegundos
+
+  // Función para resetear el timer de inactividad
+  const resetInactivityTimer = () => {
+    // Limpiar timer existente
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+    }
+
+    // Crear nuevo timer
+    inactivityTimer.current = setTimeout(() => {
+      // Navegar a la pantalla principal
+      navigation.navigate('Home');
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  // Función para limpiar el timer
+  const clearInactivityTimer = () => {
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
+  };
+
+  // Función para manejar la actividad del usuario
+  const handleUserActivity = () => {
+    resetInactivityTimer();
+  };
+
+  // ===== EFECTOS =====
+
+  // Configurar timer de inactividad al montar el componente
+  useEffect(() => {
+    // Iniciar el timer cuando se monta el componente
+    resetInactivityTimer();
+
+    // Listener para cambios de estado de la app
+    const handleAppStateChange = (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // App volvió al foreground, resetear timer
+        resetInactivityTimer();
+      } else if (nextAppState.match(/inactive|background/)) {
+        // App va al background, limpiar timer
+        clearInactivityTimer();
+      }
+      appState.current = nextAppState;
+    };
+
+    // Suscribirse a cambios de estado de la app
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    // Cleanup al desmontar
+    return () => {
+      clearInactivityTimer();
+      subscription?.remove();
+    };
+  }, []);
 
   // Datos para los selects
   const carreras = ['Sistemas', 'Química', 'Mecánica', 'Civil', 'Eléctrica'];
@@ -59,36 +123,41 @@ const SubjectsScreen = ({ navigation }) => {
 
   // Función para navegar a Home
   const goToHome = () => {
+    clearInactivityTimer();
     navigation.navigate('Home');
   };
 
   // Abrir modal específico
   const openModal = (modalType) => {
+    handleUserActivity(); // Resetear timer al abrir modal
     setCurrentModal(modalType);
     setModalVisible(true);
   };
 
   // Cerrar modal
   const closeModal = () => {
+    handleUserActivity(); // Resetear timer al cerrar modal
     setModalVisible(false);
     setCurrentModal(null);
   };
 
   // Seleccionar opción
   const handleSelect = (value) => {
+    handleUserActivity(); // Resetear timer al seleccionar
+    
     switch (currentModal) {
       case 'carrera':
         setSelectedCarrera(value);
         // Resetear año y comisión cuando cambia la carrera
         setSelectedAnio(null);
         setSelectedComision(null);
-        setShowMaterias(null);
+        setShowMaterias(false);
         break;
       case 'anio':
         setSelectedAnio(value);
         // Resetear comisión cuando cambia el año
         setSelectedComision(null);
-        setShowMaterias(null);
+        setShowMaterias(false);
         break;
       case 'comision':
         setSelectedComision(value);
@@ -99,6 +168,8 @@ const SubjectsScreen = ({ navigation }) => {
 
   // Función para buscar materias
   const handleBuscar = () => {
+    handleUserActivity(); // Resetear timer al buscar
+    
     if (selectedCarrera && selectedAnio && selectedComision) {
       setShowMaterias(true);
     } else {
@@ -150,7 +221,11 @@ const SubjectsScreen = ({ navigation }) => {
       </View>
 
       {/* Contenido principal */}
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        onTouchStart={handleUserActivity} // Resetear timer al tocar la pantalla
+        onScroll={handleUserActivity} // Resetear timer al hacer scroll
+      >
         {/* Sección de selección - Carrera, Año, Comisión */}
         <View style={styles.selectionSection}>
           {/* Select de Carrera */}
