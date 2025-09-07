@@ -1,4 +1,4 @@
-const materiasQ11 = [
+export const materiasQ11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -65,7 +65,7 @@ const materiasQ11 = [
     }
 ];
 
-const materiasC11 = [
+export const materiasC11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -132,7 +132,7 @@ const materiasC11 = [
     }
 ];
 
-const materiasM11 = [
+export const materiasM11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -199,7 +199,7 @@ const materiasM11 = [
     }
 ];
 
-const materiasE11 = [
+export const materiasE11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -266,7 +266,7 @@ const materiasE11 = [
     }
 ];
 
-const materiasI11 = [
+export const materiasI11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -334,7 +334,7 @@ const materiasI11 = [
     }
 ];
 
-const materiasS11 = [
+export const materiasS11 = [
     {
     nombre: 'Algebra y Geometria (Anual)',
     horarios: [
@@ -395,7 +395,7 @@ const materiasS11 = [
     }
 ];
 
-const materiasS51 = [
+export const materiasS51 = [
     {
     nombre: 'Sustemas de Gestion (Anual)',
     horarios: [

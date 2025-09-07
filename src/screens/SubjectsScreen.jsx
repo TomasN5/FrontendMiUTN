@@ -12,6 +12,17 @@ import {
 // Importar componentes
 import SelectModal from '../components/SelectModal';
 
+// Importar datos de materias
+import { 
+  materiasQ11, 
+  materiasC11, 
+  materiasM11, 
+  materiasE11, 
+  materiasI11, 
+  materiasS11, 
+  materiasS51 
+} from '../assets/Materias.js';
+
 // Importar estilos
 import styles, { COLORS } from './SubjectsScreen.css.js';
 
@@ -22,6 +33,12 @@ const SubjectsScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentModal, setCurrentModal] = useState(null);
   const [showMaterias, setShowMaterias] = useState(false);
+  const [materias, setMaterias] = useState([]);
+  
+  // Estados para manejar las carreras del endpoint
+  const [carreras, setCarreras] = useState([]);
+  const [loadingCarreras, setLoadingCarreras] = useState(false);
+  const [errorCarreras, setErrorCarreras] = useState(null);
 
   // Referencias para el timer de inactividad
   const inactivityTimer = useRef(null);
@@ -50,6 +67,39 @@ const SubjectsScreen = ({ navigation }) => {
       clearTimeout(inactivityTimer.current);
       inactivityTimer.current = null;
     }
+  };
+
+  // Función para obtener carreras desde el endpoint
+  const fetchCarreras = async () => {
+    try {
+      setLoadingCarreras(true);
+      setErrorCarreras(null);
+      
+      const response = await fetch('https://d8083c3ae966.ngrok-free.app/api/v1/MiUTN/career/');
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      setCarreras(data);
+      
+    } catch (error) {
+      console.error('Error al obtener carreras:', error);
+      setErrorCarreras(error.message);
+      
+      // En caso de error, usar datos por defecto
+      setCarreras(mapCarreras);
+    } finally {
+      setLoadingCarreras(false);
+    }
+  };
+
+  // Función para refrescar carreras
+  const handleRefreshCarreras = () => {
+    handleUserActivity(); // Resetear timer
+    fetchCarreras();
   };
 
   // Función para manejar la actividad del usuario
@@ -86,40 +136,35 @@ const SubjectsScreen = ({ navigation }) => {
     };
   }, []);
 
-  // Datos para los selects
-  const carreras = ['Sistemas', 'Química', 'Mecánica', 'Civil', 'Eléctrica'];
-  const anios = ['1', '2', '3', '4', '5'];
-  const comisiones = ['A', 'B', 'C', 'D'];
+  // Efecto para cargar carreras al montar el componente
+  useEffect(() => {
+    fetchCarreras();
+  }, []);
 
-  // Datos de ejemplo para los frames (materias)
-  const materias = [
-    {
-      nombre: 'Proyecto Final (Anual)',
-      horarios: [
-        { dia: 'Martes', hora: '20:15-22:15' },
-        { dia: 'Jueves', hora: '20:30-22:30' }
-      ],
-      aula: '131',
-      profesor: 'Sergio Antonini'
-    },
-    {
-      nombre: 'Base de Datos II',
-      horarios: [
-        { dia: 'Lunes', hora: '18:00-20:00' },
-        { dia: 'Miércoles', hora: '18:00-20:00' }
-      ],
-      aula: '205',
-      profesor: 'María Rodriguez'
-    },
-    {
-      nombre: 'Inteligencia Artificial',
-      horarios: [
-        { dia: 'Viernes', hora: '16:00-19:00' }
-      ],
-      aula: '310',
-      profesor: 'Carlos López'
+  // Datos para los selects
+  const anios = ['1', '2', '3', '4', '5'];
+
+  // Función para obtener materias según la comisión seleccionada
+  const getMateriasByComision = (comision) => {
+    switch (comision) {
+      case 'Q11':
+        return materiasQ11;
+      case 'C11':
+        return materiasC11;
+      case 'M11':
+        return materiasM11;
+      case 'E11':
+        return materiasE11;
+      case 'I11':
+        return materiasI11;
+      case 'S11':
+        return materiasS11;
+      case 'S51':
+        return materiasS51;
+      default:
+        return [];
     }
-  ];
+  };
 
   const mapCarreras =  [
     { id: 1, nombre: 'Sistemas' },
@@ -252,6 +297,9 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
     handleUserActivity(); // Resetear timer al buscar
     
     if (selectedCarrera && selectedAnio && selectedComision) {
+      // Obtener las materias según la comisión seleccionada
+      const materiasFiltradas = getMateriasByComision(selectedComision);
+      setMaterias(materiasFiltradas);
       setShowMaterias(true);
     } else {
       alert('Por favor, complete todos los campos: Carrera, Año y Comisión');
@@ -261,7 +309,7 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
   // Obtener opciones según el modal actual
   const getCurrentOptions = () => {
     switch (currentModal) {
-      case 'carrera': return mapCarreras;
+      case 'carrera': return carreras.length > 0 ? carreras : mapCarreras;
       case 'anio': return anios;
       case 'comision': return getComisionesByCarreraYAnio(selectedCarrera, selectedAnio);;
       default: return [];
@@ -291,7 +339,8 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
     // Función para obtener el nombre de la carrera seleccionada para mostrar
     const getSelectedCarreraName = () => {
       if (!selectedCarrera) return 'Seleccionar carrera';
-      const carrera = mapCarreras.find(c => c.id === selectedCarrera);
+      const carrerasList = carreras.length > 0 ? carreras : mapCarreras;
+      const carrera = carrerasList.find(c => c.id === selectedCarrera);
       return carrera ? carrera.nombre : 'Seleccionar carrera';
     };
 
@@ -321,14 +370,31 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
           <TouchableOpacity
             style={styles.selectButton}
             onPress={() => openModal('carrera')}
+            disabled={loadingCarreras}
           >
             <Text style={[
               styles.selectButtonText,
-              selectedCarrera && styles.selectButtonTextSelected
+              selectedCarrera && styles.selectButtonTextSelected,
+              loadingCarreras && styles.selectButtonTextDisabled
             ]}>
-              {getSelectedCarreraName()}
+              {loadingCarreras ? 'Cargando carreras...' : getSelectedCarreraName()}
             </Text>
           </TouchableOpacity>
+          
+          {/* Mostrar error si hay problema cargando carreras */}
+          {errorCarreras && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Error al cargar carreras: {errorCarreras}
+              </Text>
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={handleRefreshCarreras}
+              >
+                <Text style={styles.refreshButtonText}>Reintentar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Select de Año */}
           <Text style={styles.sectionTitle}>Año</Text>

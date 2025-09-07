@@ -162,6 +162,30 @@ const styles = StyleSheet.create({
     color: COLORS.grayDark,
     fontWeight: '500',
   },
+  errorContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f44336',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#d32f2f',
+    marginBottom: 8,
+  },
+  refreshButton: {
+    padding: 8,
+    backgroundColor: COLORS.primary,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
 });
 
 export default styles;
