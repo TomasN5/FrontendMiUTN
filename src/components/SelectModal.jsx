@@ -42,7 +42,7 @@ const SelectModal = ({
                     item.id ? selectedValue.id === item.id : selectedValue === item
                   ) && styles.optionItemSelected
                 ]}
-                onPress={() => onSelect(item.id || item)} // Pasar solo el ID o el valor
+                onPress={() => onSelect(item)} // Pasar el objeto completo
               >
                 <Text style={[
                   styles.optionText,

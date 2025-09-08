@@ -82,9 +82,15 @@ const SubjectsScreen = ({ navigation }) => {
       }
       
       const data = await response.json();
+      console.log('Datos de la API:', data);
       
-      setCarreras(data);
+      // Transformar el objeto en un array con id y nombre
+      const carrerasarray = Object.entries(data).map(([id, nombre]) => ({
+        id: parseInt(id),
+        nombre: nombre
+      }));
       
+      setCarreras(carrerasarray);
     } catch (error) {
       console.error('Error al obtener carreras:', error);
       setErrorCarreras(error.message);
@@ -273,7 +279,7 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
 
     switch (currentModal) {
       case 'carrera':
-        setSelectedCarrera(value);
+        setSelectedCarrera(value.id);
         // Resetear año y comisión cuando cambia la carrera
         setSelectedAnio(null);
         setSelectedComision(null);
@@ -329,7 +335,12 @@ const getComisionesByCarreraYAnio = (carrera, anio) => {
   // Obtener valor seleccionado actual
   const getSelectedValue = () => {
     switch (currentModal) {
-      case 'carrera': return selectedCarrera;
+      case 'carrera': 
+        if (selectedCarrera) {
+          const carrerasList = carreras.length > 0 ? carreras : mapCarreras;
+          return carrerasList.find(c => c.id === selectedCarrera) || null;
+        }
+        return null;
       case 'anio': return selectedAnio;
       case 'comision': return selectedComision;
       default: return null;
