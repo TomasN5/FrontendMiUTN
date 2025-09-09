@@ -26,7 +26,7 @@ import {
 // Importar estilos
 import styles, { COLORS } from './SubjectsScreen.css.js';
 
-const uriApi = "https://a6c56c126a30.ngrok-free.appp"
+const uriApi = "https://a6c56c126a30.ngrok-free.app"
 
 
 const SubjectsScreen = ({ navigation }) => {
