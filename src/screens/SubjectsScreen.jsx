@@ -407,6 +407,8 @@ const mapApiMateriasToFrontend = (apiData) => {
                       <Text style={styles.infoLabel}>Aula: </Text>
                       <Text style={styles.infoValue}>{materia.aula}</Text>
                     </View>
+                  </View>
+                  <View style={styles.infoContainer}>
                     <View style={styles.infoItem}>
                       <Text style={styles.infoLabel}>Profesor: </Text>
                       <Text style={styles.infoValue}>{materia.profesor}</Text>
