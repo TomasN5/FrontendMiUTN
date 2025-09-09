@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   materiaNombre: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.black,
     marginBottom: 12,
     textAlign: 'left',
   },
@@ -186,6 +186,16 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: 'bold',
   },
+  materiaContainer: {
+  borderRadius: 10,
+  marginBottom: 12,
+  padding: 12,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  elevation: 3,
+},
 });
 
 export default styles;

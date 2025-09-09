@@ -26,7 +26,8 @@ import {
 // Importar estilos
 import styles, { COLORS } from './SubjectsScreen.css.js';
 
-const uriApi = "https://a6c56c126a30.ngrok-free.app"
+const uriApi = "https://a6c56c126a30.ngrok-free.appp"
+
 
 const SubjectsScreen = ({ navigation }) => {
   const [selectedCarrera, setSelectedCarrera] = useState(null);
@@ -124,8 +125,9 @@ const SubjectsScreen = ({ navigation }) => {
   const mapCarreras = [
     { id: 1, nombre: 'Sistemas' },
     { id: 2, nombre: 'Química' },
-    { id: 3, nombre: 'Mecánica' },
-    { id: 4, nombre: 'Civil' },
+    { id: 3, nombre: 'Civil' },
+    { id: 4, nombre: 'Mecánica' },
+
     { id: 5, nombre: 'Industrial' },
     { id: 6, nombre: 'Eléctrica' }
   ];
@@ -288,84 +290,108 @@ const mapApiMateriasToFrontend = (apiData) => {
     }
   };
 
+  const getCarreraBackground = () => {
+  if (!selectedCarrera) return COLORS.background || '#FFFFFF'; // color default
+  return carreraColors[selectedCarrera] || '#FFFFFF';
+};
+
   // ========================
   // Render
   // ========================
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={goToHome} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
+  <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" />
+    <View style={styles.header}>
+      <TouchableOpacity onPress={goToHome} style={styles.backButton}>
+        <Text style={styles.backIcon}>←</Text>
+      </TouchableOpacity>
+      <Text style={styles.title}>MiUTN</Text>
+      <View style={styles.headerSpacer} />
+    </View>
+
+    <ScrollView 
+      style={styles.content}
+      onTouchStart={handleUserActivity}
+      onScroll={handleUserActivity}
+    >
+      <View style={styles.selectionSection}>
+        <Text style={styles.sectionTitle}>Carrera</Text>
+        <TouchableOpacity
+          style={styles.selectButton}
+          onPress={() => openModal('carrera')}
+          disabled={loadingCarreras}
+        >
+          <Text style={[
+            styles.selectButtonText,
+            selectedCarrera && styles.selectButtonTextSelected,
+            loadingCarreras && styles.selectButtonTextDisabled
+          ]}>
+            {loadingCarreras ? 'Cargando carreras...' : getSelectedCarreraName()}
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.title}>MiUTN</Text>
-        <View style={styles.headerSpacer} />
+
+        {errorCarreras && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error al cargar carreras: {errorCarreras}</Text>
+            <TouchableOpacity style={styles.refreshButton} onPress={handleRefreshCarreras}>
+              <Text style={styles.refreshButtonText}>Reintentar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Año</Text>
+        <TouchableOpacity
+          style={[styles.selectButton, !selectedCarrera && styles.selectButtonDisabled]}
+          onPress={() => selectedCarrera && openModal('anio')}
+          disabled={!selectedCarrera}
+        >
+          <Text style={[styles.selectButtonText, selectedAnio && styles.selectButtonTextSelected]}>
+            {selectedAnio || 'Seleccionar año'}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionTitle}>Comisión</Text>
+        <TouchableOpacity
+          style={[styles.selectButton, (!selectedCarrera || !selectedAnio) && styles.selectButtonDisabled]}
+          onPress={() => selectedCarrera && selectedAnio && openModal('comision')}
+          disabled={!selectedCarrera || !selectedAnio}
+        >
+          <Text style={[styles.selectButtonText, selectedComision && styles.selectButtonTextSelected]}>
+            {selectedComision || 'Seleccionar comisión'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.buscarButton} onPress={handleBuscar}>
+          <Text style={styles.buscarButtonText}>Buscar</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.content}
-        onTouchStart={handleUserActivity}
-        onScroll={handleUserActivity}
-      >
-        <View style={styles.selectionSection}>
-          <Text style={styles.sectionTitle}>Carrera</Text>
-          <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => openModal('carrera')}
-            disabled={loadingCarreras}
-          >
-            <Text style={[
-              styles.selectButtonText,
-              selectedCarrera && styles.selectButtonTextSelected,
-              loadingCarreras && styles.selectButtonTextDisabled
-            ]}>
-              {loadingCarreras ? 'Cargando carreras...' : getSelectedCarreraName()}
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.separator} />
 
-          {errorCarreras && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>Error al cargar carreras: {errorCarreras}</Text>
-              <TouchableOpacity style={styles.refreshButton} onPress={handleRefreshCarreras}>
-                <Text style={styles.refreshButtonText}>Reintentar</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+      {showMaterias && (
+        <View style={styles.framesSection}>
+          <Text style={styles.sectionTitle}>Materias</Text>
+          {materias.map((materia, index) => {
+            const carreraColors = {
+              1: { bg: '#E6F0FA', border: '#1E90FF' }, // Sistemas (azules)
+              2: { bg: '#F3E6FF', border: '#8A2BE2' }, // Química (violetas)
+              3: { bg: '#E6F9E6', border: '#228B22' }, // Civil (verdes)
+              4: { bg: '#E6F9F6', border: '#20B2AA' }, // Mecánica (celeste verdoso)
+              5: { bg: '#FFF5E6', border: '#FF8C00' }, // Industrial (naranjas)
+              6: { bg: '#FDECEC', border: '#B22222' }, // Eléctrica (rojos)
+            };
 
-          <Text style={styles.sectionTitle}>Año</Text>
-          <TouchableOpacity
-            style={[styles.selectButton, !selectedCarrera && styles.selectButtonDisabled]}
-            onPress={() => selectedCarrera && openModal('anio')}
-            disabled={!selectedCarrera}
-          >
-            <Text style={[styles.selectButtonText, selectedAnio && styles.selectButtonTextSelected]}>
-              {selectedAnio || 'Seleccionar año'}
-            </Text>
-          </TouchableOpacity>
 
-          <Text style={styles.sectionTitle}>Comisión</Text>
-          <TouchableOpacity
-            style={[styles.selectButton, (!selectedCarrera || !selectedAnio) && styles.selectButtonDisabled]}
-            onPress={() => selectedCarrera && selectedAnio && openModal('comision')}
-            disabled={!selectedCarrera || !selectedAnio}
-          >
-            <Text style={[styles.selectButtonText, selectedComision && styles.selectButtonTextSelected]}>
-              {selectedComision || 'Seleccionar comisión'}
-            </Text>
-          </TouchableOpacity>
+            const colors = carreraColors[selectedCarrera] || { bg: '#FFFFFF', border: '#000000' };
 
-          <TouchableOpacity style={styles.buscarButton} onPress={handleBuscar}>
-            <Text style={styles.buscarButtonText}>Buscar</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.separator} />
-
-        {showMaterias && (
-          <View style={styles.framesSection}>
-            <Text style={styles.sectionTitle}>Materias</Text>
-            {materias.map((materia, index) => (
-              <View key={index} style={styles.materiaContainer}>
+            return (
+              <View 
+                key={index} 
+                style={[
+                  styles.materiaContainer,
+                  { backgroundColor: colors.bg, borderColor: colors.border, borderWidth: 2 }
+                ]}
+              >
                 <View style={styles.materiaContent}>
                   <Text style={styles.materiaNombre}>{materia.nombre}</Text>
                   <View style={styles.horariosContainer}>
@@ -388,21 +414,22 @@ const mapApiMateriasToFrontend = (apiData) => {
                   </View>
                 </View>
               </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+            );
+          })}
+        </View>
+      )}
+    </ScrollView>
 
-      <SelectModal
-        visible={modalVisible}
-        onClose={closeModal}
-        options={getCurrentOptions()}
-        onSelect={handleSelect}
-        title={getModalTitle()}
-        selectedValue={getSelectedValue()}
-      />
-    </SafeAreaView>
-  );
+    <SelectModal
+      visible={modalVisible}
+      onClose={closeModal}
+      options={getCurrentOptions()}
+      onSelect={handleSelect}
+      title={getModalTitle()}
+      selectedValue={getSelectedValue()}
+    />
+  </SafeAreaView>
+);
 };
 
 export default SubjectsScreen;
