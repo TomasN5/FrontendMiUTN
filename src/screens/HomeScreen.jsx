@@ -25,6 +25,12 @@ const HomeScreen = ({ navigation }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   
+  const navigateToSubjects = () => {
+    console.log('Navegando a pantalla de Materias');
+    navigation.navigate('Subjects');
+  };
+
+
   // Datos de ejemplo para el slider de anuncios (más items para efecto infinito)
   const sliderItems = [
     { 
@@ -125,7 +131,7 @@ const HomeScreen = ({ navigation }) => {
         
         <Button
           title="Materias"
-          onPress={() => console.log('Materias presionado')}
+          onPress={navigateToSubjects}
           style={styles.giantButton}
           textStyle={styles.giantButtonText}
           imageSource={materiasIcon}
