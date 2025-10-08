@@ -193,14 +193,9 @@ const styles = StyleSheet.create({
     right: 10,
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 108, 223, 0.1)',
+    backgroundColor: '#006cdfff',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emailIcon: {
-    width: 32,
-    height: 32,
-    tintColor: COLORS.primary,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -208,8 +203,12 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-
     elevation: 5,
+  },
+  emailIcon: {
+    width: 32,
+    height: 32,
+    tintColor: COLORS.white,
   },
 });
 
