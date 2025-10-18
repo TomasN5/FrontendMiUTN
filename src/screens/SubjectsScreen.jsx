@@ -44,6 +44,7 @@ const SubjectsScreen = ({ navigation }) => {
   const [showMaterias, setShowMaterias] = useState(false);
   const [materias, setMaterias] = useState([]);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState('');
 
   const [carreras, setCarreras] = useState([]);
   const [loadingCarreras, setLoadingCarreras] = useState(false);
@@ -183,8 +184,9 @@ const SubjectsScreen = ({ navigation }) => {
     setCurrentModal(null);
   };
 
-  const openEmailModal = () => {
+  const openEmailModal = (email) => {
     handleUserActivity();
+    setSelectedEmail(email || mail); // Usar email del backend o constante como fallback
     setEmailModalVisible(true);
   };
 
@@ -226,7 +228,8 @@ const mapApiMateriasToFrontend = (apiData) => {
         hora: date.time
       })),
       aula: com.classroom,
-      profesor: com.professor
+      profesor: com.professor,
+      email: com.email,
     }))
   );
 };
@@ -434,7 +437,7 @@ const mapApiMateriasToFrontend = (apiData) => {
                   
                   <TouchableOpacity 
                     style={styles.emailIconContainer} 
-                    onPress={openEmailModal}
+                    onPress={() => openEmailModal(materia.email)}
                   >
                     <Image 
                       source={mailIcon} 
@@ -462,7 +465,7 @@ const mapApiMateriasToFrontend = (apiData) => {
     <EmailModal
       visible={emailModalVisible}
       onClose={closeEmailModal}
-      email={mail}
+      email={selectedEmail}
     />
   </SafeAreaView>
 );
