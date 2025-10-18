@@ -11,6 +11,7 @@ import {
 // Importar componentes
 import Button from '../components/Button';
 import SliderItem from '../components/SliderItem';
+import AnnouncementModal from '../components/AnnoucementModal.jsx';
 
 // Importar estilos
 import styles from './HomeScreen.css.js';
@@ -24,39 +25,55 @@ const HomeScreen = ({ navigation }) => {
   const scrollViewRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   
   const navigateToSubjects = () => {
     console.log('Navegando a pantalla de Materias');
     navigation.navigate('Subjects');
   };
 
-
-  // Datos de ejemplo para el slider de anuncios (más items para efecto infinito)
+  // Datos de ejemplo con los nuevos atributos
   const sliderItems = [
     { 
       id: 1, 
       title: 'Paro de Transporte', 
-      description: 'El dictado de clases será normal' 
+      description: 'El dictado de clases será normal',
+      fullDescription: 'Debido al paro de transporte programado para el día de mañana, se informa a toda la comunidad educativa que el dictado de clases se desarrollará con normalidad. Se recomienda a los estudiantes planificar su traslado con anticipación y considerar medios de transporte alternativos. Las autoridades estarán monitoreando la situación.',
+      important: true,
+      image: false
     },
     { 
       id: 2, 
       title: 'Cambio de Aula', 
-      description: 'Matemática II se dictará en Aula 105' 
+      description: 'Matemática II se dictará en Aula 105',
+      fullDescription: 'Por trabajos de mantenimiento programados en el Aula 203, la materia Matemática II se dictará temporalmente en el Aula 105 del edificio principal. Este cambio será efectivo a partir del lunes próximo y hasta nuevo aviso. Los horarios de las clases permanecen sin cambios.',
+      important: false,
+      image: false
     },
     { 
       id: 3, 
       title: 'Novedades Exámenes', 
-      description: 'Fechas de exámenes actualizadas' 
+      description: 'Fechas de exámenes actualizadas',
+      fullDescription: 'Se han actualizado las fechas de exámenes finales para el período diciembre 2024 - febrero 2025. Los estudiantes pueden consultar el nuevo calendario en el sistema académico. Se recomienda verificar las fechas específicas de cada materia.',
+      important: true,
+      image: false
     },
     { 
       id: 4, 
       title: 'Inscripciones Abiertas', 
-      description: 'Período de inscripción para materias' 
+      description: 'Período de inscripción para materias',
+      fullDescription: 'Se encuentra abierto el período de inscripción para las materias del primer cuatrimestre 2025. Los estudiantes podrán inscribirse a través del sistema online hasta el 30 de noviembre. No se aceptarán inscripciones fuera de término.',
+      important: false,
+      image: false
     },
     { 
       id: 5, 
       title: 'Biblioteca Cerrada', 
-      description: 'La biblioteca permanecerá cerrada' 
+      description: 'La biblioteca permanecerá cerrada',
+      fullDescription: 'La biblioteca central permanecerá cerrada este viernes 15 de noviembre por tareas de inventario general. El servicio se reanudará normalmente el lunes 18 de noviembre. Durante este período, el servicio de biblioteca digital estará disponible las 24 horas.',
+      important: false,
+      image: false
     },
   ];
 
@@ -91,6 +108,13 @@ const HomeScreen = ({ navigation }) => {
 
   const handleSliderPress = (item) => {
     console.log('Anuncio presionado:', item.title);
+    setSelectedAnnouncement(item);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedAnnouncement(null);
   };
 
   // Manejar scroll manual
@@ -115,7 +139,6 @@ const HomeScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>MiUTN</Text>
-
         <Text style={styles.time}>{formatTime(currentTime)}</Text>
       </View>
       
@@ -159,6 +182,7 @@ const HomeScreen = ({ navigation }) => {
               key={`${item.id}-${index}`}
               item={item}
               onPress={handleSliderPress}
+              isImportant={item.important}
             />
           ))}
         </Animated.ScrollView>
@@ -176,6 +200,13 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
       </View>
+
+      {/* Modal de Anuncio */}
+      <AnnouncementModal
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        announcement={selectedAnnouncement}
+      />
     </SafeAreaView>
   );
 };
