@@ -5,7 +5,10 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Animated
+  Animated,
+  ActivityIndicator,
+  Alert,
+  RefreshControl
 } from 'react-native';
 
 // Importar componentes
@@ -28,53 +31,138 @@ const HomeScreen = ({ navigation }) => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   
+  // Estados para la API
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // URL base de la API - ajustar según tu configuración
+  // IMPORTANTE: Cambiar esta URL por la URL real de tu API
+  // Ejemplo: 'https://tu-dominio.ngrok.io/api/announcements' o 'http://localhost:3000/api/announcements'
+  const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication'; // Cambiar por tu URL real
+  
+  // Configuración de actualización automática
+  const AUTO_UPDATE_CONFIG = {
+    enabled: true,        // Habilitar/deshabilitar actualización automática
+    interval: 30000,      // Intervalo en milisegundos (30 segundos)
+    onAppFocus: true,     // Actualizar cuando la app vuelve al primer plano
+    onPullRefresh: true,  // Permitir pull-to-refresh
+  };
+  
   const navigateToSubjects = () => {
     console.log('Navegando a pantalla de Materias');
     navigation.navigate('Subjects');
   };
 
-  // Datos de ejemplo con los nuevos atributos
-  const sliderItems = [
-    { 
-      id: 1, 
-      title: 'Paro de Transporte', 
-      description: 'El dictado de clases será normal',
-      fullDescription: 'Debido al paro de transporte programado para el día de mañana, se informa a toda la comunidad educativa que el dictado de clases se desarrollará con normalidad. Se recomienda a los estudiantes planificar su traslado con anticipación y considerar medios de transporte alternativos. Las autoridades estarán monitoreando la situación.',
-      important: true,
-      image: false
-    },
-    { 
-      id: 2, 
-      title: 'Cambio de Aula', 
-      description: 'Matemática II se dictará en Aula 105',
-      fullDescription: 'Por trabajos de mantenimiento programados en el Aula 203, la materia Matemática II se dictará temporalmente en el Aula 105 del edificio principal. Este cambio será efectivo a partir del lunes próximo y hasta nuevo aviso. Los horarios de las clases permanecen sin cambios.',
+  // FETCH: Obtener anuncios publicados con mejor manejo de errores
+  const fetchAnnouncements = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+      console.log('Iniciando fetch a:', `${API_BASE_URL}/findAll`);
+      
+      // Agregar timeout para evitar esperas infinitas
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+
+      const response = await fetch(`${API_BASE_URL}/findAll`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Datos recibidos:', data);
+      
+      function quitarHora(fechaConHora) {
+        if(fechaConHora != null)
+          return fechaConHora.split('T')[0];
+        else
+          return null;
+      }
+
+      // Filtrar solo los anuncios publicados y mapear datos
+      const publishedAnnouncements = data
+        .filter(item => item.hidden) // Solo anuncios publicados
+        .map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          fullDescription: item.content || item.description,
+          date: quitarHora(item.creationDate) || "Sin fecha",
+          important: item.priority,
+          content: item.content,
+          image: item.image,
+          expirationDate: quitarHora(item.expirationDate)
+        }))
+        .slice(0, 6); // Limitar a 6 anuncios para el slider
+
+      console.log('Anuncios publicados mapeados:', publishedAnnouncements);
+      setAnnouncements(publishedAnnouncements);
+      
+    } catch (err) {
+      console.error('Error completo en fetch:', err);
+      
+      if (err.name === 'AbortError') {
+        setError('La solicitud tardó demasiado tiempo. Verifica tu conexión.');
+      } else if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        setError('Error de conexión. Verifica: 1) Tu conexión a internet, 2) Que la URL de la API sea correcta, 3) Que ngrok esté activo');
+      } else {
+        setError(`Error al cargar los anuncios: ${err.message}`);
+      }
+      
+      // Datos de ejemplo en caso de error
+      setAnnouncements([
+        {
+          id: 1,
+          title: "Sistema en Mantenimiento",
+          description: "Estamos teniendo dificultades técnicas. Los anuncios se cargarán pronto.",
+          fullDescription: "Estamos experimentando dificultades técnicas con el servidor. Los anuncios se cargarán automáticamente una vez que se resuelva el problema. Disculpe las molestias.",
+          date: new Date().toISOString().split('T')[0],
+          important: true,
+          image: false
+        },
+        {
+          id: 2,
+          title: "Bienvenido al Sistema",
+          description: "Usa los botones superiores para gestionar anuncios, materias y profesores.",
+          fullDescription: "Bienvenido a MiUTN. Utiliza los botones superiores para navegar entre las diferentes secciones: Mapa para ubicaciones, Materias para gestión académica, y otros servicios disponibles.",
+          date: new Date().toISOString().split('T')[0],
+          important: false,
+          image: false
+        }
+      ]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Usar anuncios de la API o datos de fallback
+  const sliderItems = announcements.length > 0 ? announcements : [
+    {
+      id: 1,
+      title: "Cargando anuncios...",
+      description: "Por favor espera mientras cargamos los anuncios más recientes.",
+      fullDescription: "Estamos cargando los anuncios más recientes del sistema. Esto puede tomar unos momentos.",
       important: false,
       image: false
-    },
-    { 
-      id: 3, 
-      title: 'Novedades Exámenes', 
-      description: 'Fechas de exámenes actualizadas',
-      fullDescription: 'Se han actualizado las fechas de exámenes finales para el período diciembre 2024 - febrero 2025. Los estudiantes pueden consultar el nuevo calendario en el sistema académico. Se recomienda verificar las fechas específicas de cada materia.',
-      important: true,
-      image: false
-    },
-    { 
-      id: 4, 
-      title: 'Inscripciones Abiertas', 
-      description: 'Período de inscripción para materias',
-      fullDescription: 'Se encuentra abierto el período de inscripción para las materias del primer cuatrimestre 2025. Los estudiantes podrán inscribirse a través del sistema online hasta el 30 de noviembre. No se aceptarán inscripciones fuera de término.',
-      important: false,
-      image: false
-    },
-    { 
-      id: 5, 
-      title: 'Biblioteca Cerrada', 
-      description: 'La biblioteca permanecerá cerrada',
-      fullDescription: 'La biblioteca central permanecerá cerrada este viernes 15 de noviembre por tareas de inventario general. El servicio se reanudará normalmente el lunes 18 de noviembre. Durante este período, el servicio de biblioteca digital estará disponible las 24 horas.',
-      important: false,
-      image: false
-    },
+    }
   ];
 
   // Duplicar items para efecto infinito
@@ -96,6 +184,46 @@ const HomeScreen = ({ navigation }) => {
 
     return () => clearInterval(autoScroll);
   }, [currentIndex, sliderItems.length]);
+
+  // Función para refresh manual
+  const onRefresh = () => {
+    fetchAnnouncements(true);
+  };
+
+  // Cargar anuncios al montar el componente
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  // Actualización periódica configurable
+  useEffect(() => {
+    if (!AUTO_UPDATE_CONFIG.enabled) return;
+
+    const interval = setInterval(() => {
+      console.log('Actualizando anuncios automáticamente...');
+      fetchAnnouncements(true);
+    }, AUTO_UPDATE_CONFIG.interval);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Actualizar al volver a la pantalla (cuando la app vuelve del background)
+  useEffect(() => {
+    if (!AUTO_UPDATE_CONFIG.onAppFocus) return;
+
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'active') {
+        console.log('App activa, actualizando anuncios...');
+        fetchAnnouncements(true);
+      }
+    };
+
+    // Importar AppState dinámicamente para evitar problemas de importación
+    const { AppState } = require('react-native');
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => subscription?.remove();
+  }, []);
 
   // Actualizar hora cada minuto
   useEffect(() => {
@@ -165,40 +293,59 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.sliderContainer}>
         <Text style={styles.sliderTitle}>Anuncios</Text>
         
-        <Animated.ScrollView
-          ref={scrollViewRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: false, listener: handleScroll }
-          )}
-          scrollEventThrottle={16}
-          style={styles.slider}
-        >
-          {infiniteItems.map((item, index) => (
-            <SliderItem
-              key={`${item.id}-${index}`}
-              item={item}
-              onPress={handleSliderPress}
-              isImportant={item.important}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Cargando anuncios...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <Button
+              title="Reintentar"
+              onPress={fetchAnnouncements}
+              style={styles.retryButton}
+              textStyle={styles.retryButtonText}
             />
-          ))}
-        </Animated.ScrollView>
+          </View>
+        ) : (
+          <>
+            <Animated.ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                { useNativeDriver: false, listener: handleScroll }
+              )}
+              scrollEventThrottle={16}
+              style={styles.slider}
+            >
+              {infiniteItems.map((item, index) => (
+                <SliderItem
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  onPress={handleSliderPress}
+                  isImportant={item.important}
+                />
+              ))}
+            </Animated.ScrollView>
 
-        {/* Indicadores de paginación */}
-        <View style={styles.pagination}>
-          {sliderItems.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.paginationDot,
-                index === currentIndex && styles.paginationDotActive
-              ]}
-            />
-          ))}
-        </View>
+            {/* Indicadores de paginación */}
+            <View style={styles.pagination}>
+              {sliderItems.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === currentIndex && styles.paginationDotActive
+                  ]}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </View>
 
       {/* Modal de Anuncio */}

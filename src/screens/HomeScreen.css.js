@@ -110,6 +110,45 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     width: 12,
   },
+  // Estilos para loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: COLORS.gray,
+    textAlign: 'center',
+  },
+  // Estilos para error
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#e74c3c',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   // Exportar variables para el cálculo del scroll
   sliderItemWidth: SLIDER_ITEM_WIDTH,
   sliderItemMargin: SLIDER_ITEM_MARGIN,
