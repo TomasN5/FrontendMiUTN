@@ -9,6 +9,13 @@ const SliderItem = ({ item, onPress }) => {
       onPress={() => onPress(item)}
     >
       <View style={sliderItemStyles.sliderContent}>
+        {/* Badge de importancia */}
+        {item.important && (
+          <View style={sliderItemStyles.importantBadge}>
+            <Text style={sliderItemStyles.importantBadgeText}>¡Importante!</Text>
+          </View>
+        )}
+        
         <Text 
           style={sliderItemStyles.sliderItemTitle} 
           numberOfLines={1}

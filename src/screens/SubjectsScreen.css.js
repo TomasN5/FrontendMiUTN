@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
     padding: 15,
+    position: 'relative',
   },
   materiaContent: {
     // Sin scroll horizontal, todo visible
@@ -186,16 +187,29 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: 'bold',
   },
-  materiaContainer: {
-  borderRadius: 10,
-  marginBottom: 12,
-  padding: 12,
-  shadowColor: '#000',
-  shadowOpacity: 0.1,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 4,
-  elevation: 3,
-},
+  emailIconContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#006cdfff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  emailIcon: {
+    width: 32,
+    height: 32,
+    tintColor: COLORS.white,
+  },
 });
 
 export default styles;
