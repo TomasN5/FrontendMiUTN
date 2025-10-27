@@ -91,31 +91,28 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: Platform.OS === 'ios' ? 34 : 24,
   },
-  /* Estilos para contenido de imagen */
-  imageContainer: {
+  /* Estilos para contenido del anuncio */
+  announcementContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 24,
-    position: 'relative',
   },
-  image: {
+  /* Estilos para sección de imagen */
+  imageSection: {
+    marginVertical: 20,
+    alignItems: 'center',
+  },
+  announcementImage: {
     width: '100%',
-    height: 320,
-    borderRadius: 16,
+    height: 200,
+    borderRadius: 12,
     shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  /* Estilos para contenido de texto */
-  textContent: {
-    flex: 1,
-    padding: 24,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   titleSection: {
     marginBottom: 24,
@@ -192,6 +189,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.gray,
     fontWeight: '500',
+  },
+  // Estilos para carga de imagen
+  imageLoadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.grayLight,
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  imageLoadingText: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  // Estilos para error de imagen
+  imageErrorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.dangerLight,
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  imageErrorText: {
+    fontSize: 16,
+    color: COLORS.danger,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 12,
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

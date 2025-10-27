@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
   StatusBar,
   Dimensions,
   Animated,
-  Image
+  Image,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import styles from './AnnouncementModal.css.js'
 
@@ -22,6 +24,67 @@ const AnnouncementModal = ({
 }) => {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
+  
+  // Estados para manejo de imágenes
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
+  // URL base de la API
+  const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN';
+
+  // Función para descargar imagen desde el endpoint
+  const downloadImage = async (imagePath) => {
+    if (!imagePath) return null;
+    
+    try {
+      setImageLoading(true);
+      setImageError(false);
+      
+      const downloadUrl = `${API_BASE_URL}/publication/download?path=${encodeURIComponent(imagePath)}`;
+      console.log('Descargando imagen desde:', downloadUrl);
+      
+      // Verificar que la URL es válida
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
+      // Si la respuesta es exitosa, usar la URL de descarga
+      return downloadUrl;
+    } catch (error) {
+      console.error('Error descargando imagen:', error);
+      setImageError(true);
+      return null;
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  // Efecto para manejar la descarga de imagen cuando el modal se abre
+  useEffect(() => {
+    if (visible && announcement?.imagePath) {
+      downloadImage(announcement.imagePath).then(url => {
+        if (url) {
+          setImageUrl(url);
+        }
+      });
+    } else if (visible && announcement?.imageUrl) {
+      // Si ya tiene imageUrl, usarla directamente
+      setImageUrl(announcement.imageUrl);
+    } else {
+      // Resetear estados
+      setImageUrl(null);
+      setImageError(false);
+      setImageLoading(false);
+    }
+  }, [visible, announcement]);
 
   React.useEffect(() => {
     if (visible) {
@@ -103,43 +166,61 @@ const AnnouncementModal = ({
               contentContainerStyle={styles.scrollContent}
             >
               
-              {/* Si es una imagen, mostrar solo la imagen */}
-              {announcement.image ? (
-                <View style={styles.imageContainer}>
-                  <Image 
-                    source={{ uri: announcement.imageUrl || 'https://via.placeholder.com/300x200' }}
-                    style={styles.image}
-                    resizeMode="cover"
-                  />
+              {/* Contenido del anuncio con imagen y texto */}
+              <View style={styles.announcementContent}>
+                
+                {/* Título con icono de importancia si es necesario */}
+                <View style={styles.titleSection}>
+                  <Text style={styles.announcementTitle}>
+                    {announcement.title}
+                  </Text>
                   {announcement.important && (
                     <View style={styles.importantBadge}>
                       <Text style={styles.importantIcon}>⚠️</Text>
                     </View>
                   )}
                 </View>
-              ) : (
-                /* Si no es imagen, mostrar título y descripción completa */
-                <View style={styles.textContent}>
-                  {/* Título con icono de importancia si es necesario */}
-                  <View style={styles.titleSection}>
-                    <Text style={styles.announcementTitle}>
-                      {announcement.title}
-                    </Text>
-                    {announcement.important && (
-                      <View style={styles.importantBadge}>
-                        <Text style={styles.importantIcon}>⚠️</Text>
+
+                {/* Imagen si existe */}
+                {announcement.imagePath && (
+                  <View style={styles.imageSection}>
+                    {imageLoading ? (
+                      <View style={styles.imageLoadingContainer}>
+                        <ActivityIndicator size="large" color="#007AFF" />
+                        <Text style={styles.imageLoadingText}>Cargando imagen...</Text>
                       </View>
+                    ) : imageError ? (
+                      <View style={styles.imageErrorContainer}>
+                        <Text style={styles.imageErrorText}>⚠️</Text>
+                        <Text style={styles.imageErrorText}>Error al cargar la imagen</Text>
+                        <TouchableOpacity 
+                          style={styles.retryButton}
+                          onPress={() => announcement.imagePath && downloadImage(announcement.imagePath)}
+                        >
+                          <Text style={styles.retryButtonText}>Reintentar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <Image 
+                        source={{ 
+                          uri: imageUrl || announcement.imageUrl || 'https://via.placeholder.com/300x200' 
+                        }}
+                        style={styles.announcementImage}
+                        resizeMode="cover"
+                        onError={() => setImageError(true)}
+                      />
                     )}
                   </View>
+                )}
 
-                  {/* Descripción completa */}
-                  <View style={styles.descriptionSection}>
-                    <Text style={styles.fullDescriptionText}>
-                      {announcement.fullDescription || announcement.description}
-                    </Text>
-                  </View>
+                {/* Descripción completa */}
+                <View style={styles.descriptionSection}>
+                  <Text style={styles.fullDescriptionText}>
+                    {announcement.fullDescription || announcement.description}
+                  </Text>
                 </View>
-              )}
+
+              </View>
 
             </ScrollView>
           </SafeAreaView>
