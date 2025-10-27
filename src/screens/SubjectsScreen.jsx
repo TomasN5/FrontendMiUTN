@@ -6,11 +6,13 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
-  AppState
+  AppState,
+  Image
 } from 'react-native';
 
 // Importar componentes
 import SelectModal from '../components/SelectModal';
+import EmailModal from '../components/EmailModal';
 
 // Importar datos de materias
 import { 
@@ -26,8 +28,12 @@ import {
 // Importar estilos
 import styles, { COLORS } from './SubjectsScreen.css.js';
 
-const uriApi = "https://a6c56c126a30.ngrok-free.app"
+// Importar imagen
+const mailIcon = require('../assets/images/mail.png');
 
+const mail = "professor@frlp.utn.edu.ar";
+
+const uriApi = "https://a6c56c126a30.ngrok-free.app"
 
 const SubjectsScreen = ({ navigation }) => {
   const [selectedCarrera, setSelectedCarrera] = useState(null);
@@ -37,6 +43,8 @@ const SubjectsScreen = ({ navigation }) => {
   const [currentModal, setCurrentModal] = useState(null);
   const [showMaterias, setShowMaterias] = useState(false);
   const [materias, setMaterias] = useState([]);
+  const [emailModalVisible, setEmailModalVisible] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState('');
 
   const [carreras, setCarreras] = useState([]);
   const [loadingCarreras, setLoadingCarreras] = useState(false);
@@ -176,6 +184,17 @@ const SubjectsScreen = ({ navigation }) => {
     setCurrentModal(null);
   };
 
+  const openEmailModal = (email) => {
+    handleUserActivity();
+    setSelectedEmail(email || mail); // Usar email del backend o constante como fallback
+    setEmailModalVisible(true);
+  };
+
+  const closeEmailModal = () => {
+    handleUserActivity();
+    setEmailModalVisible(false);
+  };
+
   const handleSelect = (value) => {
     handleUserActivity();
     switch (currentModal) {
@@ -209,7 +228,8 @@ const mapApiMateriasToFrontend = (apiData) => {
         hora: date.time
       })),
       aula: com.classroom,
-      profesor: com.professor
+      profesor: com.professor,
+      email: com.email,
     }))
   );
 };
@@ -414,6 +434,17 @@ const mapApiMateriasToFrontend = (apiData) => {
                       <Text style={styles.infoValue}>{materia.profesor}</Text>
                     </View>
                   </View>
+                  
+                  <TouchableOpacity 
+                    style={styles.emailIconContainer} 
+                    onPress={() => openEmailModal(materia.email)}
+                  >
+                    <Image 
+                      source={mailIcon} 
+                      style={styles.emailIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
             );
@@ -429,6 +460,12 @@ const mapApiMateriasToFrontend = (apiData) => {
       onSelect={handleSelect}
       title={getModalTitle()}
       selectedValue={getSelectedValue()}
+    />
+
+    <EmailModal
+      visible={emailModalVisible}
+      onClose={closeEmailModal}
+      email={selectedEmail}
     />
   </SafeAreaView>
 );
