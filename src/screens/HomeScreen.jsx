@@ -40,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
   // URL base de la API - ajustar según tu configuración
   // IMPORTANTE: Cambiar esta URL por la URL real de tu API
   // Ejemplo: 'https://tu-dominio.ngrok.io/api/announcements' o 'http://localhost:3000/api/announcements'
-  const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN/publication'; // Cambiar por tu URL real
+  const API_BASE_URL = 'http://192.168.0.13:8080/api/v1/miUTN/publication'; // Cambiar por tu URL real
   
   // Configuración de actualización automática
   const AUTO_UPDATE_CONFIG = {
@@ -274,7 +274,7 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.buttonsContainer}>
         <Button
           title="Mapa"
-          onPress={() => console.log('Mapa presionado')}
+          onPress={() => navigation.navigate('PlanoViewer')} // ← SOLO CAMBIA ESTA LÍNEA
           style={styles.giantButton}
           textStyle={styles.giantButtonText}
           imageSource={mapaIcon}
@@ -287,7 +287,7 @@ const HomeScreen = ({ navigation }) => {
           textStyle={styles.giantButtonText}
           imageSource={materiasIcon}
         />
-      </View>
+</View>
       
       {/* Slider Infinito */}
       <View style={styles.sliderContainer}>

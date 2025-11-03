@@ -33,7 +33,7 @@ const mailIcon = require('../assets/images/mail.png');
 
 const mail = "professor@frlp.utn.edu.ar";
 
-const uriApi = "https://a6c56c126a30.ngrok-free.app"
+const uriApi = "http://192.168.0.13:8080" 
 
 const SubjectsScreen = ({ navigation }) => {
   const [selectedCarrera, setSelectedCarrera] = useState(null);

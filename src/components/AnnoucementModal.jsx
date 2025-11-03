@@ -31,7 +31,7 @@ const AnnouncementModal = ({
   const [imageError, setImageError] = useState(false);
   
   // URL base de la API
-  const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN';
+  const API_BASE_URL = 'http://192.168.0.13:8080/api/v1/miUTN';
 
   // Función para descargar imagen desde el endpoint
   const downloadImage = async (imagePath) => {
