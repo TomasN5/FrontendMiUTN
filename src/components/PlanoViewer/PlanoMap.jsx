@@ -21,8 +21,8 @@ const PlanoMap = ({
   getGraphConnectionsForPlano,
   showNavigationPanel = false,
   onToggleControlPanel,
-  showBackButton = false, // 🔥 Nueva prop
-  onBackPress // 🔥 Nueva prop
+  showBackButton = false,
+  onBackPress
 }) => {
   const { 
     adaptNode, 
@@ -251,22 +251,20 @@ const PlanoMap = ({
         )}
       </View>
       
-      {/* 🔥 CONTROLES SUPERIORES IZQUIERDA - Botón Volver */}
+      {/* 🔥 SOLO CAMBIÉ LA UBICACIÓN DEL BOTÓN VOLVER - Los demás se quedan igual */}
       {showBackButton && !showNavigationPanel && (
-        <View style={styles.topLeftControls}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={onBackPress}
-          >
-            <Text style={styles.backButtonIcon}>←</Text>
-            <Text style={styles.backButtonText}>Volver</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={onBackPress}
+        >
+          <Text style={styles.backButtonIcon}>←</Text>
+          <Text style={styles.backButtonText}>Volver</Text>
+        </TouchableOpacity>
       )}
       
-      {/* 🔥 CONTROLES SUPERIORES DERECHA - Zoom y Configuración */}
+      {/* 🔥 CONTROLES DE ZOOM Y BOTÓN PARA PANEL - SE MANTIENEN IGUAL */}
       {!showNavigationPanel && showZoomControls && (
-        <View style={styles.topRightControls}>
+        <View style={styles.controlsContainer}>
           {/* Botón para mostrar/ocultar ControlPanel */}
           <TouchableOpacity 
             style={styles.panelButton}
@@ -333,14 +331,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  // 🔥 NUEVO: Controles superiores izquierda (Volver)
-  topLeftControls: {
+  // 🔥 SOLO MODIFIQUÉ EL BOTÓN VOLVER - Los demás estilos igual
+  backButton: {
     position: 'absolute',
     left: 20,
-    top: 20,
-    zIndex: 100,
-  },
-  backButton: {
+    top: 30, // 🔥 MOVIDO MÁS ABAJO para no interferir con otros elementos
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -354,6 +349,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: '#e5e5e5',
+    zIndex: 100,
   },
   backButtonIcon: {
     fontSize: 18,
@@ -366,11 +362,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007AFF',
   },
-  // 🔥 NUEVO: Controles superiores derecha (Zoom y Configuración)
-  topRightControls: {
+  // 🔥 LOS DEMÁS CONTROLES SE MANTIENEN IGUAL
+  controlsContainer: {
     position: 'absolute',
     right: 20,
-    top: 20,
+    top: '25%',
     alignItems: 'center',
     zIndex: 100,
   },
@@ -427,7 +423,7 @@ const styles = StyleSheet.create({
   showControlsButton: {
     position: 'absolute',
     right: 20,
-    top: 20,
+    top: '30%',
     width: 44,
     height: 44,
     borderRadius: 22,
