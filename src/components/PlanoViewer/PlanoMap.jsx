@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Image,
@@ -7,10 +7,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import AreaPolygon from './AreaPolygon';
+import GraphConnections from './GraphConnections';
 import { useCoordinateAdapter } from './useCoordinateAdapter';
 import { useZoomPan } from './useZoomPan';
 
-const PlanoMap = ({ plano, areas = [], points = [], rutaActual }) => {
+const PlanoMap = ({ 
+  plano, 
+  areas = [], 
+  points = [], 
+  rutaActual = [], 
+  graphConnections = [], 
+  getRouteNodes,
+  getGraphConnectionsForPlano,
+  showNavigationPanel = false
+}) => {
   const { 
     adaptNode, 
     onImageLayout, 
@@ -30,10 +40,93 @@ const PlanoMap = ({ plano, areas = [], points = [], rutaActual }) => {
     handleTouchEnd,
   } = useZoomPan();
 
-  const [showZoomControls, setShowZoomControls] = React.useState(true);
+  const [showZoomControls, setShowZoomControls] = useState(true);
 
+  // Adaptar áreas y puntos
   const adaptedAreas = areas.map(area => adaptNode(area, scale, offsetX, offsetY, plano));
   const adaptedPoints = points.map(point => adaptNode(point, scale, offsetX, offsetY, plano));
+
+  // Determinar si un nodo está en la ruta y su posición
+  const getNodeRouteInfo = useCallback((nodeId) => {
+    if (!rutaActual || rutaActual.length === 0) return { isRouteNode: false, isRouteStart: false, isRouteEnd: false };
+    
+    const nodeIndex = rutaActual.findIndex(node => node && node.id === nodeId);
+    if (nodeIndex === -1) return { isRouteNode: false, isRouteStart: false, isRouteEnd: false };
+    
+    return {
+      isRouteNode: true,
+      isRouteStart: nodeIndex === 0,
+      isRouteEnd: nodeIndex === rutaActual.length - 1
+    };
+  }, [rutaActual]);
+
+  // Preparar conexiones
+  const prepareGraphConnections = useCallback(() => {
+    if (!graphConnections || graphConnections.length === 0) return [];
+    
+    if (getGraphConnectionsForPlano && plano?.id) {
+      return getGraphConnectionsForPlano(plano.id);
+    }
+
+    return graphConnections
+      .map(connection => {
+        if (!connection.from || !connection.to) return null;
+
+        const fromAdapted = adaptedAreas.find(a => a.id === connection.from.id) || 
+                           adaptedPoints.find(p => p.id === connection.from.id);
+        const toAdapted = adaptedAreas.find(a => a.id === connection.to.id) || 
+                         adaptedPoints.find(p => p.id === connection.to.id);
+
+        if (!fromAdapted || !toAdapted) {
+          return null;
+        }
+
+        const fromPlano = fromAdapted.planoId || connection.from.planoId;
+        const toPlano = toAdapted.planoId || connection.to.planoId;
+        
+        if (fromPlano !== plano?.id || toPlano !== plano?.id) {
+          return null;
+        }
+
+        return {
+          ...connection,
+          from: fromAdapted,
+          to: toAdapted
+        };
+      })
+      .filter(Boolean);
+  }, [graphConnections, adaptedAreas, adaptedPoints, plano?.id, getGraphConnectionsForPlano]);
+
+  // Preparar ruta
+  const prepareRouteNodes = useCallback(() => {
+    if (!rutaActual || rutaActual.length === 0) return [];
+
+    if (getRouteNodes) {
+      const routeIds = rutaActual.map(node => node.id);
+      const routeNodes = getRouteNodes(routeIds);
+      
+      return routeNodes.map(node => {
+        const adaptedNode = adaptedAreas.find(a => a.id === node.id) || 
+                           adaptedPoints.find(p => p.id === node.id) ||
+                           adaptNode(node, scale, offsetX, offsetY, plano);
+        return adaptedNode;
+      }).filter(Boolean);
+    } else {
+      return rutaActual.map(node => {
+        const adaptedNode = adaptedAreas.find(a => a.id === node.id) || 
+                           adaptedPoints.find(p => p.id === node.id);
+        
+        if (!adaptedNode) {
+          return null;
+        }
+        
+        return adaptedNode;
+      }).filter(Boolean);
+    }
+  }, [rutaActual, getRouteNodes, adaptedAreas, adaptedPoints, adaptNode, scale, offsetX, offsetY, plano]);
+
+  const preparedConnections = prepareGraphConnections();
+  const preparedRouteNodes = prepareRouteNodes();
 
   // Handler para gestos con información de imagen
   const handleTouchMoveWithImage = useCallback((event) => {
@@ -102,78 +195,76 @@ const PlanoMap = ({ plano, areas = [], points = [], rutaActual }) => {
               ]
             }
           ]}>
-            {adaptedAreas.map((area) => (
-              <AreaPolygon
-                key={area.id}
-                area={area}
-                isAdapted={true}
-                pointScale={area.pointScale || 1}
-              />
-            ))}
+            {/* Graph Connections con escala */}
+            <GraphConnections
+              rutaActual={preparedRouteNodes}
+              graphConnections={preparedConnections}
+              planoActual={plano}
+              showRoute={preparedRouteNodes.length > 0}
+              showGraphConnections={true}
+              scale={scale}
+            />
             
-            {adaptedPoints.map((punto) => (
-              <AreaPolygon
-                key={punto.id}
-                area={punto}
-                isAdapted={true}
-                pointScale={punto.pointScale || 1}
-              />
-            ))}
+            {/* MOSTRAR TODAS LAS ÁREAS */}
+            {adaptedAreas.map((area) => {
+              const routeInfo = getNodeRouteInfo(area.id);
+              return (
+                <AreaPolygon
+                  key={area.id}
+                  area={area}
+                  isAdapted={true}
+                  pointScale={area.pointScale || 1}
+                  showLabels={true}
+                  isRouteNode={routeInfo.isRouteNode}
+                  isRouteStart={routeInfo.isRouteStart}
+                  isRouteEnd={routeInfo.isRouteEnd}
+                />
+              );
+            })}
+            
+            {/* MOSTRAR SOLO PUNTOS ESPECIALES */}
+            {adaptedPoints
+              .filter(punto => punto.tipo !== 'punto')
+              .map((punto) => {
+                const routeInfo = getNodeRouteInfo(punto.id);
+                return (
+                  <AreaPolygon
+                    key={punto.id}
+                    area={punto}
+                    isAdapted={true}
+                    pointScale={punto.pointScale || 1}
+                    showLabels={true}
+                    isRouteNode={routeInfo.isRouteNode}
+                    isRouteStart={routeInfo.isRouteStart}
+                    isRouteEnd={routeInfo.isRouteEnd}
+                  />
+                );
+              })}
           </View>
         )}
       </View>
       
-      {/* Controles de Zoom */}
-      {showZoomControls && (
+      {/* CONTROLES DE ZOOM - SOLO cuando no hay panel de navegación */}
+      {!showNavigationPanel && showZoomControls && (
         <View style={styles.zoomControls}>
           <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
-            <Text style={styles.zoomButtonText}>+</Text>
+            <Text style={styles.zoomButtonIcon}>+</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
-            <Text style={styles.zoomButtonText}>-</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.zoomButton} onPress={reset}>
-            <Text style={styles.zoomButtonText}>⟲</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.zoomButton} 
-            onPress={() => setShowZoomControls(false)}
-          >
-            <Text style={styles.zoomButtonText}>✕</Text>
+            <Text style={styles.zoomButtonIcon}>−</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {!showZoomControls && (
+      {/* Botón para mostrar controles cuando están ocultos */}
+      {!showNavigationPanel && !showZoomControls && (
         <TouchableOpacity 
           style={styles.showControlsButton}
           onPress={() => setShowZoomControls(true)}
         >
-          <Text style={styles.showControlsText}>🎛️</Text>
+          <Text style={styles.showControlsIcon}>🔍</Text>
         </TouchableOpacity>
       )}
-
-      {/* Información del Zoom */}
-      <View style={styles.zoomInfo}>
-        <Text style={styles.zoomInfoText}>
-          Zoom: {(scale * 100).toFixed(0)}%
-        </Text>
-      </View>
-
-      {rutaActual.length > 0 && (
-        <View style={styles.rutaOverlay}>
-          <Text style={styles.rutaText}>
-            🧭 Ruta activa: {rutaActual.length} pasos
-          </Text>
-        </View>
-      )}
-      
-      <View style={styles.planoInfo}>
-        <Text style={styles.planoNombre}>{plano.nombre}</Text>
-        <Text style={styles.planoStats}>
-          {areas.length} áreas • {points.length} puntos
-        </Text>
-      </View>
 
       {!isReady && (
         <View style={styles.loadingOverlay}>
@@ -213,12 +304,12 @@ const styles = StyleSheet.create({
     right: 20,
     top: '30%',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 25,
-    padding: 10,
+    borderRadius: 20,
+    padding: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
     elevation: 5,
     zIndex: 100,
   },
@@ -229,12 +320,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 4,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  zoomButtonText: {
+  zoomButtonIcon: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   showControlsButton: {
     position: 'absolute',
@@ -247,75 +343,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
     elevation: 5,
     zIndex: 100,
   },
-  showControlsText: {
+  showControlsIcon: {
     color: 'white',
     fontSize: 18,
-  },
-  zoomInfo: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    zIndex: 100,
-  },
-  zoomInfoText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
   },
   loadingText: {
     fontSize: 18,
     color: '#666'
-  },
-  rutaOverlay: {
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 122, 255, 0.9)',
-    padding: 10,
-    alignItems: 'center',
-    zIndex: 20
-  },
-  rutaText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16
-  },
-  planoInfo: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 20
-  },
-  planoNombre: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20
-  },
-  planoStats: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12
   },
   loadingOverlay: {
     position: 'absolute',

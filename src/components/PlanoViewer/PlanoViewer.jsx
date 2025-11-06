@@ -2,43 +2,53 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   TouchableOpacity,
-  Text,
+  Text, // 🔥 Asegurar importación
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePlanoManager } from './usePlanoManager';
 import { useMapData } from './useMapData';
 import { useGPSNavigation } from './useGPSNavigation';
 import PlanoMap from './PlanoMap';
 import ControlPanel from './ControlPanel';
 import NavigationPanel from './NavigationPanel';
-import { useCoordinateAdapter } from './useCoordinateAdapter';
 
 const PlanoViewer = ({ navigation }) => {
   const planoManager = usePlanoManager();
-  const mapData = useMapData(); // Solo carga datos, sin edición
+  const mapData = useMapData();
   const gpsNavigation = useGPSNavigation(mapData.areas, mapData.puntos, mapData.planos);
+  
   const [showNavigationPanel, setShowNavigationPanel] = useState(false);
+  const [showZoomControls, setShowZoomControls] = useState(true);
   const [planoDataActual, setPlanoDataActual] = useState({ areas: [], puntos: [] });
-  const { screenWidth, screenHeight } = useCoordinateAdapter();
 
-  // Inicializar planos
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
   }, []);
-useEffect(() => {
-  console.log('📱 Tamaño de pantalla:', { screenWidth, screenHeight });
-}, [screenWidth, screenHeight]);
-  // Actualizar datos cuando cambia el plano
+
   useEffect(() => {
     if (planoManager.planoActual && !mapData.loading) {
       const datos = mapData.getPlanoData(planoManager.planoActual.id);
       setPlanoDataActual(datos);
-      console.log(`📍 Plano ${planoManager.planoActual.nombre}: ${datos.areas.length} áreas, ${datos.puntos.length} puntos`);
     }
   }, [planoManager.planoActual, mapData.loading]);
+
+  const handleShowNavigation = () => {
+    setShowNavigationPanel(true);
+    setShowZoomControls(false);
+  };
+
+  const handleCloseNavigation = () => {
+    setShowNavigationPanel(false);
+    setShowZoomControls(true);
+  };
+
+  const handleCalcularRuta = () => {
+    gpsNavigation.calcularRuta();
+    handleCloseNavigation();
+  };
 
   if (mapData.loading) {
     return (
@@ -80,7 +90,7 @@ useEffect(() => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Botón de volver */}
+      {/* Botón de volver - CORREGIDO: Todo el texto en <Text> */}
       <TouchableOpacity 
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -88,47 +98,45 @@ useEffect(() => {
         <Text style={styles.backButtonText}>← Volver</Text>
       </TouchableOpacity>
       
-      {/* Mapa del plano con datos reales */}
       <PlanoMap
         plano={planoManager.planoActual}
         areas={planoDataActual.areas}
         points={planoDataActual.puntos}
         rutaActual={gpsNavigation.rutaActual}
+        graphConnections={gpsNavigation.graphConnections}
+        getGraphConnectionsForPlano={gpsNavigation.getGraphConnectionsForPlano}
+        getRouteNodes={gpsNavigation.getRouteNodes}
+        showNavigationPanel={showNavigationPanel}
       />
       
-      {/* Panel de control de navegación */}
       <ControlPanel
         planoActual={planoManager.planoActual}
-        infoPlanoActual={planoManager.infoPlanoActual()}
+        infoPlanoActual={planoManager.infoPlanoActual}
         carreraActual={planoManager.carreraActual}
         carrerasDisponibles={planoManager.carrerasDisponibles}
+        planosCarreraActual={planoManager.planosCarreraActual}
         onCambiarCarrera={planoManager.cambiarCarrera}
         onCambiarPlano={planoManager.cambiarPlano}
         onAvanzarPlano={planoManager.avanzarPlano}
         onRetrocederPlano={planoManager.retrocederPlano}
-        onShowNavigation={() => setShowNavigationPanel(true)}
-        stats={{
-          areas: planoDataActual.areas.length,
-          puntos: planoDataActual.puntos.length
-        }}
+        onShowNavigation={handleShowNavigation}
       />
       
-      {/* Panel de navegación GPS */}
       {showNavigationPanel && (
         <NavigationPanel
-            gpsNavigation={{
-              origen: gpsNavigation.origen,
-              destino: gpsNavigation.destino,
-              rutaActual: gpsNavigation.rutaActual,
-              isCalculando: gpsNavigation.isCalculando,
-              setOrigen: gpsNavigation.setOrigen,        // 🔥 Asegurar que esté
-              setDestino: gpsNavigation.setDestino,      // 🔥 Asegurar que esté
-              calcularRuta: gpsNavigation.calcularRuta,  // 🔥 Asegurar que esté
-              limpiarRuta: gpsNavigation.limpiarRuta     // 🔥 Asegurar que esté
-            }}
-            todosLosNodos={mapData.getAllNodes()}
-            onClose={() => setShowNavigationPanel(false)}
-          />
+          gpsNavigation={{
+            origen: gpsNavigation.origen,
+            destino: gpsNavigation.destino,
+            rutaActual: gpsNavigation.rutaActual,
+            isCalculando: gpsNavigation.isCalculando,
+            setOrigen: gpsNavigation.setOrigen,
+            setDestino: gpsNavigation.setDestino,
+            calcularRuta: handleCalcularRuta,
+            limpiarRuta: gpsNavigation.limpiarRuta
+          }}
+          todosLosNodos={mapData.getAllNodes()}
+          onClose={handleCloseNavigation}
+        />
       )}
     </SafeAreaView>
   );
@@ -141,7 +149,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 50,
+    top: 10,
     left: 10,
     zIndex: 1000,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',

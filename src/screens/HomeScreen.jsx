@@ -40,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
   // URL base de la API - ajustar según tu configuración
   // IMPORTANTE: Cambiar esta URL por la URL real de tu API
   // Ejemplo: 'https://tu-dominio.ngrok.io/api/announcements' o 'http://localhost:3000/api/announcements'
-  const API_BASE_URL = 'http://192.168.0.13:8080/api/v1/miUTN/publication'; // Cambiar por tu URL real
+  const API_BASE_URL = 'https://e13217bbfd70.ngrok-free.app/api/v1/miUTN/publication'; // Cambiar por tu URL real
   
   // Configuración de actualización automática
   const AUTO_UPDATE_CONFIG = {
@@ -51,7 +51,6 @@ const HomeScreen = ({ navigation }) => {
   };
   
   const navigateToSubjects = () => {
-    console.log('Navegando a pantalla de Materias');
     navigation.navigate('Subjects');
   };
 
@@ -64,7 +63,6 @@ const HomeScreen = ({ navigation }) => {
         setLoading(true);
       }
       setError(null);
-      console.log('Iniciando fetch a:', `${API_BASE_URL}/findAll`);
       
       // Agregar timeout para evitar esperas infinitas
       const controller = new AbortController();
@@ -87,7 +85,6 @@ const HomeScreen = ({ navigation }) => {
       }
 
       const data = await response.json();
-      console.log('Datos recibidos:', data);
       
       function quitarHora(fechaConHora) {
         if(fechaConHora != null)
@@ -112,11 +109,9 @@ const HomeScreen = ({ navigation }) => {
         }))
         .slice(0, 6); // Limitar a 6 anuncios para el slider
 
-      console.log('Anuncios publicados mapeados:', publishedAnnouncements);
       setAnnouncements(publishedAnnouncements);
       
     } catch (err) {
-      console.error('Error completo en fetch:', err);
       
       if (err.name === 'AbortError') {
         setError('La solicitud tardó demasiado tiempo. Verifica tu conexión.');
@@ -200,7 +195,6 @@ const HomeScreen = ({ navigation }) => {
     if (!AUTO_UPDATE_CONFIG.enabled) return;
 
     const interval = setInterval(() => {
-      console.log('Actualizando anuncios automáticamente...');
       fetchAnnouncements(true);
     }, AUTO_UPDATE_CONFIG.interval);
 
@@ -213,7 +207,6 @@ const HomeScreen = ({ navigation }) => {
 
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'active') {
-        console.log('App activa, actualizando anuncios...');
         fetchAnnouncements(true);
       }
     };
@@ -235,7 +228,6 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
   const handleSliderPress = (item) => {
-    console.log('Anuncio presionado:', item.title);
     setSelectedAnnouncement(item);
     setModalVisible(true);
   };

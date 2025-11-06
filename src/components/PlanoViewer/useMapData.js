@@ -11,14 +11,38 @@ export const useMapData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = 'http://192.168.0.13:8080/api/map';
+  const API_BASE_URL = 'https://e13217bbfd70.ngrok-free.app/api/map';
+
+  // Procesar áreas para asegurar que tengan puntos válidos
+  const procesarAreas = useCallback((areas) => {
+    return areas.map(area => {
+      // Si el área tiene puntos, asegurarse de que sean válidos
+      if (area.points && Array.isArray(area.points)) {
+        // Filtrar puntos válidos
+        const puntosValidos = area.points.filter(point => 
+          point && Array.isArray(point) && point.length === 2
+        );
+        
+        return {
+          ...area,
+          points: puntosValidos,
+          // Agregar centro calculado para el ícono
+          center: puntosValidos.length > 0 ? {
+            x: puntosValidos.reduce((sum, point) => sum + point[0], 0) / puntosValidos.length,
+            y: puntosValidos.reduce((sum, point) => sum + point[1], 0) / puntosValidos.length
+          } : null
+        };
+      }
+      
+      return area;
+    });
+  }, []);
 
   // Cargar todos los datos del mapa
   const loadMapData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Cargando datos del mapa desde API...');
 
       const response = await fetch(`${API_BASE_URL}/getPoint`);
       
@@ -28,28 +52,30 @@ export const useMapData = () => {
       
       const datos = await response.json();
       
-      console.log(datos)
 
       if (!datos || !datos.planos) {
-        console.log("📭 API respondió pero sin datos");
         setMapData({ planos: [], areas: [], puntos: [] });
         return;
       }
-      
-      console.log('✅ Datos del mapa cargados:');
-      console.log('   📋 Planos:', Object.keys(datos.planos).length);
+
       
       // Procesar datos
       const todasAreas = [];
       const todosPuntos = [];
       
       Object.values(datos.planos).forEach(planoData => {
-        if (planoData.areas) todasAreas.push(...planoData.areas);
+        if (planoData.areas) {
+          const areasProcesadas = procesarAreas(planoData.areas);
+          todasAreas.push(...areasProcesadas);
+        }
         if (planoData.points) todosPuntos.push(...planoData.points);
       });
       
-      console.log('   🏢 Áreas:', todasAreas.length);
-      console.log('   📍 Puntos:', todosPuntos.length);
+
+
+      // Log de áreas con polígonos
+      const areasConPoligonos = todasAreas.filter(area => area.points && area.points.length > 0);
+
 
       setMapData({
         planos: Object.values(datos.planos),
@@ -58,13 +84,12 @@ export const useMapData = () => {
       });
 
     } catch (err) {
-      console.error('❌ Error cargando datos del mapa:', err);
       setError(err.message);
       Alert.alert('Error', 'No se pudieron cargar los datos del mapa');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [procesarAreas]);
 
   // Obtener datos de un plano específico
   const getPlanoData = useCallback((planoId) => {

@@ -8,6 +8,7 @@ export const usePlanoManager = () => {
 
   const inicializarPlanosCarrera = useCallback((carrera) => {
     const planos = getPlanosByCarrera(carrera);
+    
     setPlanosCarreraActual(planos);
     setCarreraActual(carrera);
     
@@ -27,24 +28,32 @@ export const usePlanoManager = () => {
   }, [inicializarPlanosCarrera]);
 
   const cambiarPlano = useCallback((planoId) => {
-    const nuevoPlano = PLANOS_CONFIG[planoId];
+    
+    const nuevoPlano = planosCarreraActual.find(p => p.id === planoId);
     if (nuevoPlano) {
       setPlanoActual(nuevoPlano);
+    } else {
     }
-  }, []);
+  }, [planosCarreraActual, carreraActual]);
 
   const avanzarPlano = useCallback(() => {
-    if (!planoActual || planosCarreraActual.length === 0) return;
+    if (!planoActual || planosCarreraActual.length === 0) {
+      return;
+    }
     
     const indiceActual = planosCarreraActual.findIndex(p => p.id === planoActual.id);
+    
     const siguienteIndice = (indiceActual + 1) % planosCarreraActual.length;
     setPlanoActual(planosCarreraActual[siguienteIndice]);
   }, [planoActual, planosCarreraActual]);
 
   const retrocederPlano = useCallback(() => {
-    if (!planoActual || planosCarreraActual.length === 0) return;
+    if (!planoActual || planosCarreraActual.length === 0) {
+      return;
+    }
     
     const indiceActual = planosCarreraActual.findIndex(p => p.id === planoActual.id);
+    
     const anteriorIndice = (indiceActual - 1 + planosCarreraActual.length) % planosCarreraActual.length;
     setPlanoActual(planosCarreraActual[anteriorIndice]);
   }, [planoActual, planosCarreraActual]);

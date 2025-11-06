@@ -92,6 +92,16 @@ export const PLANOS_CONFIG = {
     width: 1012,
     height: 768,
     areas: []
+  },
+    quimica_p1: {
+    id: 'quimica_p1',
+    nombre: 'Química - Piso 1',
+    carrera: CARRERAS.QUIMICA,
+    piso: PISOS.PISO1,
+    src: require('./assets/quimica-piso-1.png'),
+    width: 1012,
+    height: 768,
+    areas: []
   }
 };
 
@@ -99,16 +109,17 @@ export const PLANOS_CONFIG = {
 export const getPlanosByCarrera = (carrera) => {
   return Object.values(PLANOS_CONFIG).filter(plano => 
     carrera === 'general' ? plano.carrera === 'general' : plano.carrera === carrera
-  );
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre)); // Ordenar por nombre
 };
 
 export const getCarrerasDisponibles = () => {
-  const carreras = new Set();
+  const carreras = new Set(['general']); // Siempre incluir 'general'
   Object.values(PLANOS_CONFIG).forEach(plano => {
-    if (plano.carrera !== 'general') {
+    if (plano.carrera && plano.carrera !== 'general') {
       carreras.add(plano.carrera);
     }
   });
+ 
   return Array.from(carreras);
 };
 

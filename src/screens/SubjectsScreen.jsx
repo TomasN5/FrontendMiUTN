@@ -33,7 +33,7 @@ const mailIcon = require('../assets/images/mail.png');
 
 const mail = "professor@frlp.utn.edu.ar";
 
-const uriApi = "http://192.168.0.13:8080" 
+const uriApi = "https://e13217bbfd70.ngrok-free.app" 
 
 const SubjectsScreen = ({ navigation }) => {
   const [selectedCarrera, setSelectedCarrera] = useState(null);
@@ -81,7 +81,6 @@ const SubjectsScreen = ({ navigation }) => {
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
       
       const data = await response.json();
-      console.log('Datos de la API:', data);
       
       const carrerasarray = Object.entries(data).map(([id, nombre]) => ({
         id: parseInt(id),
@@ -90,7 +89,6 @@ const SubjectsScreen = ({ navigation }) => {
 
       setCarreras(carrerasarray);
     } catch (error) {
-      console.error('Error al obtener carreras:', error);
       setErrorCarreras(error.message);
       setCarreras(mapCarreras);
     } finally {
@@ -258,11 +256,9 @@ const mapApiMateriasToFrontend = (apiData) => {
       if (!response.ok) throw new Error(`Error ${response.status}`);
 
       const data = await response.json();
-      console.log('Datos API materias:', data);
       return mapApiMateriasToFrontend(data);
 
     } catch (error) {
-      console.error('Error API materias:', error);
       return getMateriasByComisionLocal(selectedComision);
     }
   };
