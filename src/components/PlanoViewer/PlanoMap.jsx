@@ -270,7 +270,7 @@ const PlanoMap = ({
             style={styles.panelButton}
             onPress={onToggleControlPanel}
           >
-            <Text style={styles.panelButtonIcon}>⚙️</Text>
+            <Text style={styles.panelButtonIcon}>🧭</Text>
           </TouchableOpacity>
 
           {/* Controles de Zoom */}
