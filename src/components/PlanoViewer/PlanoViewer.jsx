@@ -4,7 +4,7 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
-  Text, // 🔥 Asegurar importación
+  Text,
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +22,8 @@ const PlanoViewer = ({ navigation }) => {
   
   const [showNavigationPanel, setShowNavigationPanel] = useState(false);
   const [showZoomControls, setShowZoomControls] = useState(true);
+  // 🔥 NUEVO: Estado para controlar visibilidad del ControlPanel
+  const [showControlPanel, setShowControlPanel] = useState(false);
   const [planoDataActual, setPlanoDataActual] = useState({ areas: [], puntos: [] });
 
   useEffect(() => {
@@ -38,6 +40,7 @@ const PlanoViewer = ({ navigation }) => {
   const handleShowNavigation = () => {
     setShowNavigationPanel(true);
     setShowZoomControls(false);
+    setShowControlPanel(false); // 🔥 Ocultar panel al abrir navegación
   };
 
   const handleCloseNavigation = () => {
@@ -48,6 +51,11 @@ const PlanoViewer = ({ navigation }) => {
   const handleCalcularRuta = () => {
     gpsNavigation.calcularRuta();
     handleCloseNavigation();
+  };
+
+  // 🔥 NUEVA FUNCIÓN: Alternar visibilidad del ControlPanel
+  const handleToggleControlPanel = () => {
+    setShowControlPanel(!showControlPanel);
   };
 
   if (mapData.loading) {
@@ -90,7 +98,7 @@ const PlanoViewer = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Botón de volver - CORREGIDO: Todo el texto en <Text> */}
+      {/* Botón de volver */}
       <TouchableOpacity 
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -107,20 +115,24 @@ const PlanoViewer = ({ navigation }) => {
         getGraphConnectionsForPlano={gpsNavigation.getGraphConnectionsForPlano}
         getRouteNodes={gpsNavigation.getRouteNodes}
         showNavigationPanel={showNavigationPanel}
+        onToggleControlPanel={handleToggleControlPanel} // 🔥 Nueva prop
       />
       
-      <ControlPanel
-        planoActual={planoManager.planoActual}
-        infoPlanoActual={planoManager.infoPlanoActual}
-        carreraActual={planoManager.carreraActual}
-        carrerasDisponibles={planoManager.carrerasDisponibles}
-        planosCarreraActual={planoManager.planosCarreraActual}
-        onCambiarCarrera={planoManager.cambiarCarrera}
-        onCambiarPlano={planoManager.cambiarPlano}
-        onAvanzarPlano={planoManager.avanzarPlano}
-        onRetrocederPlano={planoManager.retrocederPlano}
-        onShowNavigation={handleShowNavigation}
-      />
+      {/* 🔥 ControlPanel ahora es condicional */}
+      {showControlPanel && (
+        <ControlPanel
+          planoActual={planoManager.planoActual}
+          infoPlanoActual={planoManager.infoPlanoActual}
+          carreraActual={planoManager.carreraActual}
+          carrerasDisponibles={planoManager.carrerasDisponibles}
+          planosCarreraActual={planoManager.planosCarreraActual}
+          onCambiarCarrera={planoManager.cambiarCarrera}
+          onCambiarPlano={planoManager.cambiarPlano}
+          onAvanzarPlano={planoManager.avanzarPlano}
+          onRetrocederPlano={planoManager.retrocederPlano}
+          onShowNavigation={handleShowNavigation}
+        />
+      )}
       
       {showNavigationPanel && (
         <NavigationPanel

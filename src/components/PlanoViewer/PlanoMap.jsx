@@ -19,7 +19,8 @@ const PlanoMap = ({
   graphConnections = [], 
   getRouteNodes,
   getGraphConnectionsForPlano,
-  showNavigationPanel = false
+  showNavigationPanel = false,
+  onToggleControlPanel // 🔥 Nueva prop
 }) => {
   const { 
     adaptNode, 
@@ -148,6 +149,10 @@ const PlanoMap = ({
     }
   }, [zoomOut, imageLayout]);
 
+  const handleResetZoom = useCallback(() => {
+    reset();
+  }, [reset]);
+
   if (!plano) {
     return (
       <View style={styles.container}>
@@ -244,15 +249,29 @@ const PlanoMap = ({
         )}
       </View>
       
-      {/* CONTROLES DE ZOOM - SOLO cuando no hay panel de navegación */}
+      {/* 🔥 CONTROLES DE ZOOM Y BOTÓN PARA PANEL */}
       {!showNavigationPanel && showZoomControls && (
-        <View style={styles.zoomControls}>
-          <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
-            <Text style={styles.zoomButtonIcon}>+</Text>
+        <View style={styles.controlsContainer}>
+          {/* Botón para mostrar/ocultar ControlPanel */}
+          <TouchableOpacity 
+            style={styles.panelButton}
+            onPress={onToggleControlPanel}
+          >
+            <Text style={styles.panelButtonIcon}>🧭</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
-            <Text style={styles.zoomButtonIcon}>−</Text>
-          </TouchableOpacity>
+
+          {/* Controles de Zoom */}
+          <View style={styles.zoomControls}>
+            <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
+              <Text style={styles.zoomButtonIcon}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
+              <Text style={styles.zoomButtonIcon}>−</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={handleResetZoom}>
+              <Text style={styles.zoomButtonIcon}>⟲</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -299,10 +318,36 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  zoomControls: {
+  // 🔥 NUEVO: Contenedor para todos los controles
+  controlsContainer: {
     position: 'absolute',
     right: 20,
-    top: '30%',
+    top: '25%',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  // 🔥 NUEVO: Botón para mostrar/ocultar panel
+  panelButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+  },
+  panelButtonIcon: {
+    fontSize: 20,
+  },
+  // Controles de Zoom actualizados
+  zoomControls: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 8,
@@ -311,7 +356,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 5,
-    zIndex: 100,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
   },
   zoomButton: {
     width: 44,
