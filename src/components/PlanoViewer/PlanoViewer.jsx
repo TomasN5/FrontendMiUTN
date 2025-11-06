@@ -22,7 +22,6 @@ const PlanoViewer = ({ navigation }) => {
   
   const [showNavigationPanel, setShowNavigationPanel] = useState(false);
   const [showZoomControls, setShowZoomControls] = useState(true);
-  // 🔥 NUEVO: Estado para controlar visibilidad del ControlPanel
   const [showControlPanel, setShowControlPanel] = useState(false);
   const [planoDataActual, setPlanoDataActual] = useState({ areas: [], puntos: [] });
 
@@ -40,7 +39,7 @@ const PlanoViewer = ({ navigation }) => {
   const handleShowNavigation = () => {
     setShowNavigationPanel(true);
     setShowZoomControls(false);
-    setShowControlPanel(false); // 🔥 Ocultar panel al abrir navegación
+    setShowControlPanel(false);
   };
 
   const handleCloseNavigation = () => {
@@ -53,7 +52,6 @@ const PlanoViewer = ({ navigation }) => {
     handleCloseNavigation();
   };
 
-  // 🔥 NUEVA FUNCIÓN: Alternar visibilidad del ControlPanel
   const handleToggleControlPanel = () => {
     setShowControlPanel(!showControlPanel);
   };
@@ -84,7 +82,7 @@ const PlanoViewer = ({ navigation }) => {
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={styles.backButtonError}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.backButtonText}>Volver al Inicio</Text>
@@ -98,14 +96,6 @@ const PlanoViewer = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Botón de volver */}
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backButtonText}>← Volver</Text>
-      </TouchableOpacity>
-      
       <PlanoMap
         plano={planoManager.planoActual}
         areas={planoDataActual.areas}
@@ -115,10 +105,11 @@ const PlanoViewer = ({ navigation }) => {
         getGraphConnectionsForPlano={gpsNavigation.getGraphConnectionsForPlano}
         getRouteNodes={gpsNavigation.getRouteNodes}
         showNavigationPanel={showNavigationPanel}
-        onToggleControlPanel={handleToggleControlPanel} // 🔥 Nueva prop
+        onToggleControlPanel={handleToggleControlPanel}
+        showBackButton={true} // 🔥 Nueva prop
+        onBackPress={() => navigation.goBack()} // 🔥 Nueva prop
       />
       
-      {/* 🔥 ControlPanel ahora es condicional */}
       {showControlPanel && (
         <ControlPanel
           planoActual={planoManager.planoActual}
@@ -159,25 +150,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5'
   },
-  backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 1000,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3
+  backButtonError: {
+    backgroundColor: '#6c757d',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
   backButtonText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF'
+    fontWeight: '600'
   },
   loadingContainer: {
     flex: 1,

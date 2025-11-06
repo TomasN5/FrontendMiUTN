@@ -20,7 +20,9 @@ const PlanoMap = ({
   getRouteNodes,
   getGraphConnectionsForPlano,
   showNavigationPanel = false,
-  onToggleControlPanel // 🔥 Nueva prop
+  onToggleControlPanel,
+  showBackButton = false, // 🔥 Nueva prop
+  onBackPress // 🔥 Nueva prop
 }) => {
   const { 
     adaptNode, 
@@ -249,15 +251,28 @@ const PlanoMap = ({
         )}
       </View>
       
-      {/* 🔥 CONTROLES DE ZOOM Y BOTÓN PARA PANEL */}
+      {/* 🔥 CONTROLES SUPERIORES IZQUIERDA - Botón Volver */}
+      {showBackButton && !showNavigationPanel && (
+        <View style={styles.topLeftControls}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={onBackPress}
+          >
+            <Text style={styles.backButtonIcon}>←</Text>
+            <Text style={styles.backButtonText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
+      {/* 🔥 CONTROLES SUPERIORES DERECHA - Zoom y Configuración */}
       {!showNavigationPanel && showZoomControls && (
-        <View style={styles.controlsContainer}>
+        <View style={styles.topRightControls}>
           {/* Botón para mostrar/ocultar ControlPanel */}
           <TouchableOpacity 
             style={styles.panelButton}
             onPress={onToggleControlPanel}
           >
-            <Text style={styles.panelButtonIcon}>🧭</Text>
+            <Text style={styles.panelButtonIcon}>⚙️</Text>
           </TouchableOpacity>
 
           {/* Controles de Zoom */}
@@ -318,15 +333,47 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  // 🔥 NUEVO: Contenedor para todos los controles
-  controlsContainer: {
+  // 🔥 NUEVO: Controles superiores izquierda (Volver)
+  topLeftControls: {
+    position: 'absolute',
+    left: 20,
+    top: 20,
+    zIndex: 100,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+  },
+  backButtonIcon: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginRight: 6,
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  // 🔥 NUEVO: Controles superiores derecha (Zoom y Configuración)
+  topRightControls: {
     position: 'absolute',
     right: 20,
-    top: '25%',
+    top: 20,
     alignItems: 'center',
     zIndex: 100,
   },
-  // 🔥 NUEVO: Botón para mostrar/ocultar panel
   panelButton: {
     width: 50,
     height: 50,
@@ -346,7 +393,6 @@ const styles = StyleSheet.create({
   panelButtonIcon: {
     fontSize: 20,
   },
-  // Controles de Zoom actualizados
   zoomControls: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
@@ -381,7 +427,7 @@ const styles = StyleSheet.create({
   showControlsButton: {
     position: 'absolute',
     right: 20,
-    top: '30%',
+    top: 20,
     width: 44,
     height: 44,
     borderRadius: 22,
