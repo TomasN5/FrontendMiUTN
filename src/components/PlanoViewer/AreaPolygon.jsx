@@ -1,3 +1,4 @@
+// AreaPolygon.jsx - ARCHIVO COMPLETO CORREGIDO
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { COLORS, ICONS } from './constants';
@@ -205,7 +206,7 @@ const AreaPolygon = ({
         )}
 
         {/* Nombre pequeño siempre visible */}
-        {showLabels && !showName && ['aula', 'escalera', 'bano', 'hall', 'salida_emergencia'].includes(area.tipo) && (
+        {showLabels && !showName && ['aula', 'escalera', 'bano', 'hall', 'departamento', 'area_generica', 'salida_emergencia'].includes(area.tipo) && (
           <View style={[
             styles.areaNameSmall,
             labelPosition
@@ -226,7 +227,7 @@ const AreaPolygon = ({
     const scaledSize = baseSize * pointScale;
     const scaledIconSize = baseIconSize * pointScale;
 
-    const shouldShowFullName = ['escalera', 'salida_emergencia', 'extintor', 'botiquin'].includes(area.tipo);
+    const shouldShowFullName = ['escalera', 'salida_emergencia', 'extintor', 'botiquin', 'departamento', 'area_generica'].includes(area.tipo);
 
     return (
       <View style={styles.pointContainer}>
@@ -325,9 +326,11 @@ const AreaPolygon = ({
 const getAreaTypeDisplayName = (type) => {
   const typeNames = {
     'aula': 'Aula',
-    'escalera': 'Escalera',
-    'bano': 'Baño',
     'hall': 'Hall',
+    'departamento': 'Departamento',
+    'area_generica': 'Área Genérica',
+    'bano': 'Baño',
+    'escalera': 'Escalera',
     'pasillo': 'Pasillo',
     'extintor': 'Extintor',
     'salida_emergencia': 'Salida Emergencia',
@@ -344,6 +347,33 @@ const getShortName = (name, type) => {
   
   if (type === 'aula' && name.toLowerCase().includes('aula')) {
     return name.replace(/aula\s*/i, '');
+  }
+  
+  if (type === 'departamento') {
+    if (name.toLowerCase().includes('departamento')) {
+      return name.replace(/departamento\s*/i, 'Depto.');
+    }
+    if (name.toLowerCase().includes('depto')) {
+      return name.replace(/depto\.?\s*/i, 'Depto.');
+    }
+    return 'Depto.';
+  }
+  
+  if (type === 'area_generica') {
+    if (name.toLowerCase().includes('area generica') || name.toLowerCase().includes('área genérica')) {
+      return 'Área Gen.';
+    }
+    if (name.toLowerCase().includes('area') || name.toLowerCase().includes('área')) {
+      return name.replace(/(area|área)\s*/i, 'Área ');
+    }
+    return 'Área Gen.';
+  }
+  
+  if (type === 'hall') {
+    if (name.toLowerCase().includes('hall')) {
+      return name.replace(/hall\s*/i, 'Hall ');
+    }
+    return 'Hall';
   }
   
   if (type === 'escalera') {

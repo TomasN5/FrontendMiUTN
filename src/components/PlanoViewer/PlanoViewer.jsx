@@ -1,3 +1,4 @@
+// PlanoViewer.jsx - VERSIÓN COMPLETA RESTAURADA
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -7,7 +8,7 @@ import {
   Text,
   ActivityIndicator
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { usePlanoManager } from './usePlanoManager';
 import { useMapData } from './useMapData';
 import { useGPSNavigation } from './useGPSNavigation';
@@ -24,6 +25,7 @@ const PlanoViewer = ({ navigation }) => {
   const [showZoomControls, setShowZoomControls] = useState(true);
   const [showControlPanel, setShowControlPanel] = useState(false);
   const [planoDataActual, setPlanoDataActual] = useState({ areas: [], puntos: [] });
+  const [origenFijo, setOrigenFijo] = useState(null);
 
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
@@ -35,6 +37,79 @@ const PlanoViewer = ({ navigation }) => {
       setPlanoDataActual(datos);
     }
   }, [planoManager.planoActual, mapData.loading]);
+
+  // 🔥 RESTAURADO: Lógica completa para establecer origen fijo
+  useEffect(() => {
+    const buscarYEstablecerOrigenFijo = () => {
+      if (!mapData.getAllNodes || typeof mapData.getAllNodes !== 'function') {
+        console.log('⚠️ mapData.getAllNodes no está disponible aún');
+        return;
+      }
+
+      const todosLosNodos = mapData.getAllNodes();
+      if (!todosLosNodos || todosLosNodos.length === 0) {
+        console.log('⚠️ No hay nodos disponibles aún');
+        return;
+      }
+
+      console.log('🔍 Buscando origen fijo entre', todosLosNodos.length, 'nodos');
+      
+      let totem = null;
+
+      // 1. Buscar por tipo 'totem'
+      totem = todosLosNodos.find(node => 
+        node && node.tipo === 'totem'
+      );
+      
+      // 2. Buscar por nombre que contenga "totem"
+      if (!totem) {
+        totem = todosLosNodos.find(node => 
+          node && node.nombre && node.nombre.toLowerCase().includes('totem')
+        );
+      }
+      
+      // 3. Buscar por nombre que contenga "recepción" o "entrada"
+      if (!totem) {
+        totem = todosLosNodos.find(node => 
+          node && node.nombre && (
+            node.nombre.toLowerCase().includes('recepcion') ||
+            node.nombre.toLowerCase().includes('recepción') ||
+            node.nombre.toLowerCase().includes('entrada') ||
+            node.nombre.toLowerCase().includes('principal')
+          )
+        );
+      }
+      
+      // 4. Buscar cualquier nodo de tipo común
+      if (!totem && todosLosNodos.length > 0) {
+        totem = todosLosNodos.find(node => 
+          node && node.tipo && 
+          ['aula', 'hall', 'departamento', 'area_generica', 'escalera'].includes(node.tipo)
+        ) || todosLosNodos[0];
+      }
+
+      if (totem) {
+        console.log('✅ Origen fijo encontrado:', totem.nombre, '- ID:', totem.id);
+        setOrigenFijo(totem.id);
+        
+        // Establecer automáticamente el origen en GPS
+        if (gpsNavigation.setOrigen) {
+          gpsNavigation.setOrigen(totem.id);
+        }
+      } else {
+        console.log('⚠️ No se encontró origen fijo, usando valor por defecto');
+        setOrigenFijo('totem_principal');
+      }
+    };
+
+    // Solo ejecutar si tenemos datos y no tenemos un origen fijo ya establecido
+    if (mapData.getAllNodes && 
+        typeof mapData.getAllNodes === 'function' && 
+        !mapData.loading && 
+        !origenFijo) {
+      buscarYEstablecerOrigenFijo();
+    }
+  }, [mapData.getAllNodes, mapData.loading, origenFijo, gpsNavigation.setOrigen]);
 
   const handleShowNavigation = () => {
     setShowNavigationPanel(true);
@@ -56,92 +131,133 @@ const PlanoViewer = ({ navigation }) => {
     setShowControlPanel(!showControlPanel);
   };
 
+  // 🔥 RESTAURADO: Función getOrigenFijoInfo completa
+  const getOrigenFijoInfo = () => {
+    try {
+      if (!mapData.getAllNodes || typeof mapData.getAllNodes !== 'function') {
+        throw new Error('mapData.getAllNodes no disponible');
+      }
+
+      const todosLosNodos = mapData.getAllNodes();
+      const origen = todosLosNodos.find(n => n && n.id === origenFijo);
+      
+      if (origen) {
+        return origen;
+      }
+      
+      // Fallback si no se encuentra el origen
+      return {
+        id: origenFijo || 'totem_principal',
+        nombre: 'Punto de Inicio',
+        tipo: 'totem',
+        piso: 'Planta Principal'
+      };
+    } catch (error) {
+      console.error('Error en getOrigenFijoInfo:', error);
+      return {
+        id: 'totem_principal',
+        nombre: 'Punto de Inicio',
+        tipo: 'totem',
+        piso: 'Planta Principal'
+      };
+    }
+  };
+
   if (mapData.loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Cargando mapa...</Text>
-        </View>
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+          <StatusBar barStyle="dark-content" />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Cargando mapa...</Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   if (mapData.error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error cargando el mapa</Text>
-          <Text style={styles.errorDetail}>{mapData.error}</Text>
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={mapData.refresh}
-          >
-            <Text style={styles.retryButtonText}>Reintentar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.backButtonError}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>Volver al Inicio</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+          <StatusBar barStyle="dark-content" />
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error cargando el mapa</Text>
+            <Text style={styles.errorDetail}>{mapData.error}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={mapData.refresh}
+            >
+              <Text style={styles.retryButtonText}>Reintentar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.backButtonError}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backButtonText}>Volver al Inicio</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      <PlanoMap
-        plano={planoManager.planoActual}
-        areas={planoDataActual.areas}
-        points={planoDataActual.puntos}
-        rutaActual={gpsNavigation.rutaActual}
-        graphConnections={gpsNavigation.graphConnections}
-        getGraphConnectionsForPlano={gpsNavigation.getGraphConnectionsForPlano}
-        getRouteNodes={gpsNavigation.getRouteNodes}
-        showNavigationPanel={showNavigationPanel}
-        onToggleControlPanel={handleToggleControlPanel}
-        showBackButton={true} // 🔥 Nueva prop
-        onBackPress={() => navigation.goBack()} // 🔥 Nueva prop
-      />
-      
-      {showControlPanel && (
-        <ControlPanel
-          planoActual={planoManager.planoActual}
-          infoPlanoActual={planoManager.infoPlanoActual}
-          carreraActual={planoManager.carreraActual}
-          carrerasDisponibles={planoManager.carrerasDisponibles}
-          planosCarreraActual={planoManager.planosCarreraActual}
-          onCambiarCarrera={planoManager.cambiarCarrera}
-          onCambiarPlano={planoManager.cambiarPlano}
-          onAvanzarPlano={planoManager.avanzarPlano}
-          onRetrocederPlano={planoManager.retrocederPlano}
-          onShowNavigation={handleShowNavigation}
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <StatusBar barStyle="dark-content" />
+        
+        <PlanoMap
+          plano={planoManager.planoActual}
+          areas={planoDataActual.areas}
+          points={planoDataActual.puntos}
+          rutaActual={gpsNavigation.rutaActual}
+          graphConnections={gpsNavigation.graphConnections}
+          getGraphConnectionsForPlano={gpsNavigation.getGraphConnectionsForPlano}
+          getRouteNodes={gpsNavigation.getRouteNodes}
+          showNavigationPanel={showNavigationPanel}
+          onToggleControlPanel={handleToggleControlPanel}
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
         />
-      )}
-      
-      {showNavigationPanel && (
-        <NavigationPanel
-          gpsNavigation={{
-            origen: gpsNavigation.origen,
-            destino: gpsNavigation.destino,
-            rutaActual: gpsNavigation.rutaActual,
-            isCalculando: gpsNavigation.isCalculando,
-            setOrigen: gpsNavigation.setOrigen,
-            setDestino: gpsNavigation.setDestino,
-            calcularRuta: handleCalcularRuta,
-            limpiarRuta: gpsNavigation.limpiarRuta
-          }}
-          todosLosNodos={mapData.getAllNodes()}
-          onClose={handleCloseNavigation}
-        />
-      )}
-    </SafeAreaView>
+        
+        {showControlPanel && (
+          <ControlPanel
+            planoActual={planoManager.planoActual}
+            infoPlanoActual={planoManager.infoPlanoActual}
+            carreraActual={planoManager.carreraActual}
+            carrerasDisponibles={planoManager.carrerasDisponibles}
+            planosCarreraActual={planoManager.planosCarreraActual}
+            onCambiarCarrera={planoManager.cambiarCarrera}
+            onCambiarPlano={planoManager.cambiarPlano}
+            onAvanzarPlano={planoManager.avanzarPlano}
+            onRetrocederPlano={planoManager.retrocederPlano}
+            onShowNavigation={handleShowNavigation}
+          />
+        )}
+        
+        {showNavigationPanel && (
+          <NavigationPanel
+            gpsNavigation={{
+              origen: gpsNavigation.origen,
+              destino: gpsNavigation.destino,
+              rutaActual: gpsNavigation.rutaActual,
+              isCalculando: gpsNavigation.isCalculando,
+              setOrigen: gpsNavigation.setOrigen,
+              setDestino: gpsNavigation.setDestino,
+              calcularRuta: handleCalcularRuta,
+              limpiarRuta: gpsNavigation.limpiarRuta
+            }}
+            todosLosNodos={mapData.getAllNodes()}
+            onClose={handleCloseNavigation}
+            planoActual={planoManager.planoActual}
+            getOrigenFijoInfo={getOrigenFijoInfo}
+            origenFijo={origenFijo}
+          />
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

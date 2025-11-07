@@ -38,78 +38,66 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
   }, [generateGraphConnections]);
 
   // 🔥 CORREGIDO: Generar conexiones con validación robusta
-  const generateGraphConnections = useCallback(() => {
-    const connections = [];
-    const connectionKeys = new Set();
-    
-
-    // Función auxiliar para agregar conexiones sin duplicados
-    const addUniqueConnection = (from, to, type) => {
-      // 🔥 VALIDACIÓN ROBUSTA: Verificar que los nodos existen
-      if (!from || !to || !from.id || !to.id) {
-        return false;
-      }
-
-      // Ordenar IDs para evitar duplicados (A-B vs B-A)
-      const sortedIds = [from.id, to.id].sort();
-      const connectionKey = `${sortedIds[0]}-${sortedIds[1]}-${type}`;
-      
-      if (!connectionKeys.has(connectionKey)) {
-        connectionKeys.add(connectionKey);
-        connections.push({
-          from: from,
-          to: to,
-          type: type
-        });
-        return true;
-      }
+const generateGraphConnections = useCallback(() => {
+  const connections = [];
+  const connectionKeys = new Set();
+  
+  // Función auxiliar para agregar conexiones sin duplicados
+  const addUniqueConnection = (from, to, type) => {
+    // 🔥 INCLUIR NUEVAS ÁREAS EN LAS VALIDACIONES
+    if (!from || !to || !from.id || !to.id) {
       return false;
-    };
+    }
 
-    // 1. CONEXIÓN DE ESCALERAS ENTRE PISOS (solo las que están configuradas)
-    const escaleras = areas.filter(a => a && a.tipo === "escalera");
+    const sortedIds = [from.id, to.id].sort();
+    const connectionKey = `${sortedIds[0]}-${sortedIds[1]}-${type}`;
     
-    escaleras.forEach((escalera) => {
-      // 🔥 VALIDAR QUE LA ESCALERA TENGA CONFIGURACIÓN VÁLIDA
-      if (!escalera.carreraDestino || !escalera.pisoDestino) {
-        return;
-      }
+    if (!connectionKeys.has(connectionKey)) {
+      connectionKeys.add(connectionKey);
+      connections.push({
+        from: from,
+        to: to,
+        type: type
+      });
+      return true;
+    }
+    return false;
+  };
 
-      // Buscar escalera gemela según la configuración
-      const escaleraGemela = escaleras.find(e => 
-        e && e.id && e.id !== escalera.id &&
-        e.carreraActual === escalera.carreraDestino &&
-        e.pisoActual === escalera.pisoDestino
-      );
-      
-      if (escaleraGemela) {
-        const added = addUniqueConnection(escalera, escaleraGemela, 'escalera');
-        if (added) {
-        }
-      } else {
-      }
-    });
+  // 1. CONEXIÓN DE ESCALERAS ENTRE PISOS (incluir nuevas áreas)
+  const escaleras = areas.filter(a => a && a.tipo === "escalera");
+  
+  escaleras.forEach((escalera) => {
+    if (!escalera.carreraDestino || !escalera.pisoDestino) {
+      return;
+    }
 
-    // 2. CONEXIONES DE PASILLOS (solo los que están definidos en el JSON)
-    const pasillos = areas.filter(a => a && a.tipo === "pasillo");
+    const escaleraGemela = escaleras.find(e => 
+      e && e.id && e.id !== escalera.id &&
+      e.carreraActual === escalera.carreraDestino &&
+      e.pisoActual === escalera.pisoDestino
+    );
     
-    pasillos.forEach(pasillo => {
-      // 🔥 VALIDAR QUE EL PASILLO TENGA FROM Y TO VÁLIDOS
-      if (pasillo.from && pasillo.to && pasillo.from.id && pasillo.to.id) {
-        const added = addUniqueConnection(pasillo.from, pasillo.to, 'pasillo');
-        if (added) {
-        }
-      } else {
+    if (escaleraGemela) {
+      const added = addUniqueConnection(escalera, escaleraGemela, 'escalera');
+      if (added) {
       }
-    });
+    }
+  });
 
-    
-    // Debug detallado
-    connections.forEach(conn => {
-    });
+  // 2. CONEXIONES DE PASILLOS (incluir conexiones con nuevas áreas)
+  const pasillos = areas.filter(a => a && a.tipo === "pasillo");
+  
+  pasillos.forEach(pasillo => {
+    if (pasillo.from && pasillo.to && pasillo.from.id && pasillo.to.id) {
+      const added = addUniqueConnection(pasillo.from, pasillo.to, 'pasillo');
+      if (added) {
+      }
+    }
+  });
 
-    return connections;
-  }, [areas]);
+  return connections;
+}, [areas]);
 
   // 🔥 CORREGIDO: Construir grafo con validación robusta
   const buildGraphWithExplicitConnections = useCallback(() => {
@@ -305,7 +293,7 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
           }
         });
         
-        Alert.alert("Éxito", `Ruta encontrada con ${rutaNodos.length} pasos`);
+
       } else {
         setRutaActual([]);
         Alert.alert("Error", "No se encontró ruta. Los puntos pueden no estar conectados por pasillos o escaleras.");

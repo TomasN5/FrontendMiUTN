@@ -14,29 +14,29 @@ export const useMapData = () => {
   const API_BASE_URL = 'https://e13217bbfd70.ngrok-free.app/api/map';
 
   // Procesar áreas para asegurar que tengan puntos válidos
-  const procesarAreas = useCallback((areas) => {
-    return areas.map(area => {
-      // Si el área tiene puntos, asegurarse de que sean válidos
-      if (area.points && Array.isArray(area.points)) {
-        // Filtrar puntos válidos
-        const puntosValidos = area.points.filter(point => 
-          point && Array.isArray(point) && point.length === 2
-        );
-        
-        return {
-          ...area,
-          points: puntosValidos,
-          // Agregar centro calculado para el ícono
-          center: puntosValidos.length > 0 ? {
-            x: puntosValidos.reduce((sum, point) => sum + point[0], 0) / puntosValidos.length,
-            y: puntosValidos.reduce((sum, point) => sum + point[1], 0) / puntosValidos.length
-          } : null
-        };
-      }
+const procesarAreas = useCallback((areas) => {
+  return areas.map(area => {
+    // Si el área tiene puntos, asegurarse de que sean válidos
+    if (area.points && Array.isArray(area.points)) {
+      // Filtrar puntos válidos
+      const puntosValidos = area.points.filter(point => 
+        point && Array.isArray(point) && point.length === 2
+      );
       
-      return area;
-    });
-  }, []);
+      return {
+        ...area,
+        points: puntosValidos,
+        // Agregar centro calculado para el ícono
+        center: puntosValidos.length > 0 ? {
+          x: puntosValidos.reduce((sum, point) => sum + point[0], 0) / puntosValidos.length,
+          y: puntosValidos.reduce((sum, point) => sum + point[1], 0) / puntosValidos.length
+        } : null
+      };
+    }
+    
+    return area;
+  });
+}, []);
 
   // Cargar todos los datos del mapa
   const loadMapData = useCallback(async () => {

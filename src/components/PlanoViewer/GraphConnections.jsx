@@ -63,19 +63,19 @@ const GraphConnections = ({
   };
 
   // 🔥 Verificar si un nodo es especial (NO debe tener punto azul animado)
+
   const isSpecialNode = (node) => {
     if (!node || !node.tipo) return false;
     
     // Tipos de nodos especiales que NO deben tener puntos azules animados
     const specialTypes = [
-      'escalera', 'bano', 'hall', 'extintor', 
-      'salida_emergencia', 'botiquin', 'desfibrilador', 
+      'escalera', 'bano', 'hall', 'departamento', 'area_generica',
+      'extintor', 'salida_emergencia', 'botiquin', 'desfibrilador', 
       'alarma', 'totem', 'aula', 'pasillo'
     ];
     
     return specialTypes.includes(node.tipo);
   };
-
   // 🔥 PUNTOS AZULES SOLO PARA NODOS NO ESPECIALES
   const renderRouteDots = () => {
     if (rutaActual.length < 2 || !showRoute) return null;

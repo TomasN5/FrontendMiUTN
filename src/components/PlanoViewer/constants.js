@@ -1,8 +1,11 @@
+// constants.js - ARCHIVO COMPLETO CORREGIDO
 // constants.js
 
 export const AREA_TYPES = {
   AULA: 'aula',
   HALL: 'hall',
+  DEPARTAMENTO: 'departamento',
+  AREA_GENERICA: 'area_generica',
   BANO: 'bano',
   ESCALERA: 'escalera',
   PUNTO: 'punto',
@@ -18,6 +21,8 @@ export const AREA_TYPES = {
 export const COLORS = {
   [AREA_TYPES.AULA]: '#4CAF50',
   [AREA_TYPES.HALL]: '#FF9800',
+  [AREA_TYPES.DEPARTAMENTO]: '#2196F3',
+  [AREA_TYPES.AREA_GENERICA]: '#9E9E9E',
   [AREA_TYPES.BANO]: '#9C27B0',
   [AREA_TYPES.ESCALERA]: '#795548',
   [AREA_TYPES.PUNTO]: '#607D8B',
@@ -50,6 +55,8 @@ export const PISOS = {
 export const ICONS = {
   [AREA_TYPES.AULA]: '🏫',
   [AREA_TYPES.HALL]: '🏢',
+  [AREA_TYPES.DEPARTAMENTO]: '🏛️',
+  [AREA_TYPES.AREA_GENERICA]: '📦',
   [AREA_TYPES.BANO]: '🚻',
   [AREA_TYPES.ESCALERA]: '🪜',
   [AREA_TYPES.PUNTO]: '📍',
@@ -68,7 +75,7 @@ export const PLANOS_CONFIG = {
     nombre: 'Planta Principal',
     carrera: 'general',
     piso: 'planta_principal',
-    src: require('./assets/Dibujo1-Presentación1.png'),
+    src: require('./assets/MapaFacultadV2_1.png'),
     width: 1012,
     height: 768,
     areas: []
