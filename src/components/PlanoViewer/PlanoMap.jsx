@@ -5,11 +5,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import AreaPolygon from './AreaPolygon';
 import GraphConnections from './GraphConnections';
 import { useCoordinateAdapter } from './useCoordinateAdapter';
 import { useZoomPan } from './useZoomPan';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const PlanoMap = ({ 
   plano, 
@@ -251,28 +254,19 @@ const PlanoMap = ({
         )}
       </View>
       
-      {/* 🔥 SOLO CAMBIÉ LA UBICACIÓN DEL BOTÓN VOLVER - Los demás se quedan igual */}
+      {/* Botón Volver - Solo flecha */}
       {showBackButton && !showNavigationPanel && (
         <TouchableOpacity 
           style={styles.backButton}
           onPress={onBackPress}
         >
           <Text style={styles.backButtonIcon}>←</Text>
-          <Text style={styles.backButtonText}>Volver</Text>
         </TouchableOpacity>
       )}
       
-      {/* 🔥 CONTROLES DE ZOOM Y BOTÓN PARA PANEL - SE MANTIENEN IGUAL */}
+      {/* Controles de Zoom y Panel - En la parte superior */}
       {!showNavigationPanel && showZoomControls && (
         <View style={styles.controlsContainer}>
-          {/* Botón para mostrar/ocultar ControlPanel */}
-          <TouchableOpacity 
-            style={styles.panelButton}
-            onPress={onToggleControlPanel}
-          >
-            <Text style={styles.panelButtonIcon}>🧭</Text>
-          </TouchableOpacity>
-
           {/* Controles de Zoom */}
           <View style={styles.zoomControls}>
             <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
@@ -285,6 +279,14 @@ const PlanoMap = ({
               <Text style={styles.zoomButtonIcon}>⟲</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Botón para mostrar/ocultar ControlPanel */}
+          <TouchableOpacity 
+            style={styles.panelButton}
+            onPress={onToggleControlPanel}
+          >
+            <Text style={styles.panelButtonText}>Navegar</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -331,17 +333,17 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  // 🔥 SOLO MODIFIQUÉ EL BOTÓN VOLVER - Los demás estilos igual
+  // Botón Volver - Solo flecha
   backButton: {
     position: 'absolute',
     left: 20,
-    top: 30, // 🔥 MOVIDO MÁS ABAJO para no interferir con otros elementos
-    flexDirection: 'row',
-    alignItems: 'center',
+    top: 30,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -352,32 +354,27 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   backButtonIcon: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#007AFF',
-    marginRight: 6,
-  },
-  backButtonText: {
-    fontSize: 14,
+    fontSize: 24,
     fontWeight: '600',
     color: '#007AFF',
   },
-  // 🔥 LOS DEMÁS CONTROLES SE MANTIENEN IGUAL
+  // Controles en la parte superior (vertical)
   controlsContainer: {
     position: 'absolute',
-    right: 20,
-    top: '25%',
+    top: 30,
+    right: 20, // Separado del botón de volver que está a la izquierda
+    flexDirection: 'column',
     alignItems: 'center',
     zIndex: 100,
   },
   panelButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 140, // Ancho suficiente para el texto "Navegar"
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginTop: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -386,10 +383,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e5e5',
   },
-  panelButtonIcon: {
-    fontSize: 20,
+  panelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
   },
   zoomControls: {
+    flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 8,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 4,
+    marginHorizontal: 4,
     shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
   },
   showControlsButton: {
     position: 'absolute',
-    right: 20,
-    top: '30%',
+    top: 30,
+    right: 20, // Misma posición que los controles cuando están visibles
     width: 44,
     height: 44,
     borderRadius: 22,
