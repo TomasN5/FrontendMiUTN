@@ -153,6 +153,22 @@ const AreaPolygon = ({
           </TouchableOpacity>
         </Animated.View>
 
+        {/* Distintivo "Usted está aquí" para el totem */}
+        {area.tipo === 'totem' && (
+          <View style={[
+            styles.youAreHereContainer,
+            {
+              left: centerX - 60,
+              top: centerY + (areaScaledSize / 2) + 5,
+            }
+          ]}>
+            <View style={styles.youAreHereArrow} />
+            <View style={styles.youAreHereBubble}>
+              <Text style={styles.youAreHereText}>Usted está aquí</Text>
+            </View>
+          </View>
+        )}
+
         {/* Modal con información del área */}
         <Modal
           visible={showModal}
@@ -244,6 +260,22 @@ const AreaPolygon = ({
             )}
           </TouchableOpacity>
         </Animated.View>
+
+        {/* Distintivo "Usted está aquí" para el totem */}
+        {area.tipo === 'totem' && (
+          <View style={[
+            styles.youAreHereContainer,
+            {
+              left: displayX - 60,
+              top: displayY + (scaledSize / 2) + 5,
+            }
+          ]}>
+            <View style={styles.youAreHereArrow} />
+            <View style={styles.youAreHereBubble}>
+              <Text style={styles.youAreHereText}>Usted está aquí</Text>
+            </View>
+          </View>
+        )}
 
         {/* Modal con información del punto */}
         <Modal
@@ -645,6 +677,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     fontWeight: '600',
+  },
+  // Estilos para "Usted está aquí"
+  youAreHereContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    zIndex: 15,
+  },
+  youAreHereArrow: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#007AFF',
+    marginBottom: -1,
+  },
+  youAreHereBubble: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  youAreHereText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
 

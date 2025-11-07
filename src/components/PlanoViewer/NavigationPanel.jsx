@@ -585,7 +585,7 @@ const NavigationPanel = ({
     >
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>🧭 Navegación</Text>
+          <Text style={styles.title}>Navegación</Text>
           <Text style={styles.subtitle}>Encuentra tu camino fácilmente</Text>
         </View>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -636,7 +636,6 @@ const NavigationPanel = ({
           onPress={handleLimpiarRuta}
           disabled={!gpsNavigation.destino}
         >
-          <Text style={styles.actionButtonIcon}>🗑️</Text>
           <Text style={styles.actionButtonText}>
             {gpsNavigation.destino ? 'Limpiar Destino' : 'Sin Destino'}
           </Text>
@@ -655,7 +654,6 @@ const NavigationPanel = ({
             <ActivityIndicator color="white" size="small" />
           ) : (
             <>
-              <Text style={styles.actionButtonIcon}>🚀</Text>
               <Text style={styles.actionButtonText}>Calcular Ruta</Text>
             </>
           )}
