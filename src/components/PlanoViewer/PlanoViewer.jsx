@@ -1,4 +1,4 @@
-// PlanoViewer.jsx - VERSIÓN COMPLETA RESTAURADA
+// PlanoViewer.jsx - VERSIÓN CORREGIDA PARA CAMBIOS ENTRE CARRERAS
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,7 +6,8 @@ import {
   StatusBar,
   TouchableOpacity,
   Text,
-  ActivityIndicator
+  ActivityIndicator,
+  Animated
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { usePlanoManager } from './usePlanoManager';
@@ -26,6 +27,8 @@ const PlanoViewer = ({ navigation }) => {
   const [showControlPanel, setShowControlPanel] = useState(false);
   const [planoDataActual, setPlanoDataActual] = useState({ areas: [], puntos: [] });
   const [origenFijo, setOrigenFijo] = useState(null);
+  const [showContinuarButton, setShowContinuarButton] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
@@ -38,37 +41,75 @@ const PlanoViewer = ({ navigation }) => {
     }
   }, [planoManager.planoActual, mapData.loading]);
 
-  // 🔥 RESTAURADO: Lógica completa para establecer origen fijo
+  // 🔥 CORREGIDO: Sincronizar plano actual con segmento de ruta - manejar cambios de carrera
+  useEffect(() => {
+    if (gpsNavigation.mostrarContinuar && gpsNavigation.getInfoSegmentoActual) {
+      const infoSegmento = gpsNavigation.getInfoSegmentoActual();
+      if (infoSegmento && infoSegmento.planoId !== planoManager.planoActual?.id) {
+        console.log('🔄 Segmento requiere cambio de plano:', {
+          planoActual: planoManager.planoActual?.id,
+          planoRequerido: infoSegmento.planoId,
+          carreraRequerida: infoSegmento.planoInfo?.carrera
+        });
+        
+        // 🔥 MODIFICADO: Cambiar a la carrera correcta si es necesario
+        const carreraRequerida = infoSegmento.planoInfo?.carrera;
+        if (carreraRequerida && carreraRequerida !== planoManager.carreraActual) {
+          console.log('🏗️ Cambiando carrera a:', carreraRequerida);
+          planoManager.cambiarCarrera(carreraRequerida);
+        }
+        
+        // Cambiar al plano específico
+        setTimeout(() => {
+          planoManager.cambiarPlano(infoSegmento.planoId);
+        }, 100);
+      }
+    }
+  }, [gpsNavigation.mostrarContinuar, gpsNavigation.getInfoSegmentoActual, planoManager]);
+
+  // 🔥 NUEVO: Mostrar/ocultar botón continuar
+  useEffect(() => {
+    setShowContinuarButton(gpsNavigation.mostrarContinuar);
+    
+    if (gpsNavigation.mostrarContinuar) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [gpsNavigation.mostrarContinuar, fadeAnim]);
+
+  // Lógica de origen fijo (mantener igual)
   useEffect(() => {
     const buscarYEstablecerOrigenFijo = () => {
       if (!mapData.getAllNodes || typeof mapData.getAllNodes !== 'function') {
-        console.log('⚠️ mapData.getAllNodes no está disponible aún');
         return;
       }
 
       const todosLosNodos = mapData.getAllNodes();
       if (!todosLosNodos || todosLosNodos.length === 0) {
-        console.log('⚠️ No hay nodos disponibles aún');
         return;
       }
-
-      console.log('🔍 Buscando origen fijo entre', todosLosNodos.length, 'nodos');
       
       let totem = null;
 
-      // 1. Buscar por tipo 'totem'
       totem = todosLosNodos.find(node => 
         node && node.tipo === 'totem'
       );
       
-      // 2. Buscar por nombre que contenga "totem"
       if (!totem) {
         totem = todosLosNodos.find(node => 
           node && node.nombre && node.nombre.toLowerCase().includes('totem')
         );
       }
       
-      // 3. Buscar por nombre que contenga "recepción" o "entrada"
       if (!totem) {
         totem = todosLosNodos.find(node => 
           node && node.nombre && (
@@ -80,7 +121,6 @@ const PlanoViewer = ({ navigation }) => {
         );
       }
       
-      // 4. Buscar cualquier nodo de tipo común
       if (!totem && todosLosNodos.length > 0) {
         totem = todosLosNodos.find(node => 
           node && node.tipo && 
@@ -89,20 +129,16 @@ const PlanoViewer = ({ navigation }) => {
       }
 
       if (totem) {
-        console.log('✅ Origen fijo encontrado:', totem.nombre, '- ID:', totem.id);
         setOrigenFijo(totem.id);
         
-        // Establecer automáticamente el origen en GPS
         if (gpsNavigation.setOrigen) {
           gpsNavigation.setOrigen(totem.id);
         }
       } else {
-        console.log('⚠️ No se encontró origen fijo, usando valor por defecto');
         setOrigenFijo('totem_principal');
       }
     };
 
-    // Solo ejecutar si tenemos datos y no tenemos un origen fijo ya establecido
     if (mapData.getAllNodes && 
         typeof mapData.getAllNodes === 'function' && 
         !mapData.loading && 
@@ -131,7 +167,52 @@ const PlanoViewer = ({ navigation }) => {
     setShowControlPanel(!showControlPanel);
   };
 
-  // 🔥 RESTAURADO: Función getOrigenFijoInfo completa
+  // 🔥 CORREGIDO: Manejar clic en botón continuar con cambio de carrera
+  const handleContinuar = () => {
+    const siguienteSegmento = gpsNavigation.avanzarSiguienteSegmento();
+    if (siguienteSegmento && siguienteSegmento.planoId) {
+      console.log('🚀 Continuando al siguiente segmento:', {
+        plano: siguienteSegmento.planoId,
+        carrera: siguienteSegmento.planoInfo?.carrera,
+        segmento: siguienteSegmento.index + 1,
+        total: siguienteSegmento.total
+      });
+      
+      // 🔥 MODIFICADO: Cambiar a la carrera correcta si es necesario
+      const carreraRequerida = siguienteSegmento.planoInfo?.carrera;
+      if (carreraRequerida && carreraRequerida !== planoManager.carreraActual) {
+        console.log('🏗️ Cambiando carrera a:', carreraRequerida);
+        planoManager.cambiarCarrera(carreraRequerida);
+      }
+      
+      // Cambiar al plano específico
+      setTimeout(() => {
+        planoManager.cambiarPlano(siguienteSegmento.planoId);
+      }, 100);
+    }
+  };
+
+  // 🔥 CORREGIDO: Obtener texto del botón continuar con información de carrera
+  const getContinuarButtonText = () => {
+    if (!gpsNavigation.getInfoSegmentoActual) return 'Continuar';
+    
+    const info = gpsNavigation.getInfoSegmentoActual();
+    if (!info || !info.tieneSiguiente) return 'Continuar';
+    
+    const totalSegmentos = info.total;
+    const segmentoActual = info.numero;
+    const siguienteCarrera = info.planoInfo?.carrera;
+    
+    let texto = `Continuar (${segmentoActual}/${totalSegmentos})`;
+    
+    if (siguienteCarrera && siguienteCarrera !== planoManager.carreraActual) {
+      texto += ` → ${siguienteCarrera.charAt(0).toUpperCase() + siguienteCarrera.slice(1)}`;
+    }
+    
+    return texto;
+  };
+
+  // Función getOrigenFijoInfo (mantener igual)
   const getOrigenFijoInfo = () => {
     try {
       if (!mapData.getAllNodes || typeof mapData.getAllNodes !== 'function') {
@@ -145,7 +226,6 @@ const PlanoViewer = ({ navigation }) => {
         return origen;
       }
       
-      // Fallback si no se encuentra el origen
       return {
         id: origenFijo || 'totem_principal',
         nombre: 'Punto de Inicio',
@@ -153,7 +233,6 @@ const PlanoViewer = ({ navigation }) => {
         piso: 'Planta Principal'
       };
     } catch (error) {
-      console.error('Error en getOrigenFijoInfo:', error);
       return {
         id: 'totem_principal',
         nombre: 'Punto de Inicio',
@@ -222,6 +301,32 @@ const PlanoViewer = ({ navigation }) => {
           onBackPress={() => navigation.goBack()}
         />
         
+        {/* 🔥 MEJORADO: Botón Continuar con información de carrera */}
+        {showContinuarButton && (
+          <Animated.View style={[styles.continuarContainer, { opacity: fadeAnim }]}>
+            <TouchableOpacity 
+              style={styles.continuarButton}
+              onPress={handleContinuar}
+            >
+              <Text style={styles.continuarIcon}>⬇️</Text>
+              <View style={styles.continuarTextContainer}>
+                <Text style={styles.continuarText}>
+                  {getContinuarButtonText()}
+                </Text>
+                <Text style={styles.continuarSubtext}>
+                  {(() => {
+                    const info = gpsNavigation.getInfoSegmentoActual();
+                    if (info && info.planoInfo?.carrera !== planoManager.carreraActual) {
+                      return `Cambiando a ${info.planoInfo?.carrera}`;
+                    }
+                    return 'Toca para ir al siguiente piso de la ruta';
+                  })()}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+        
         {showControlPanel && (
           <ControlPanel
             planoActual={planoManager.planoActual}
@@ -247,7 +352,12 @@ const PlanoViewer = ({ navigation }) => {
               setOrigen: gpsNavigation.setOrigen,
               setDestino: gpsNavigation.setDestino,
               calcularRuta: handleCalcularRuta,
-              limpiarRuta: gpsNavigation.limpiarRuta
+              limpiarRuta: gpsNavigation.limpiarRuta,
+              // 🔥 AGREGADO: Pasar nuevas propiedades
+              segmentosRuta: gpsNavigation.segmentosRuta,
+              segmentoActualIndex: gpsNavigation.segmentoActualIndex,
+              mostrarContinuar: gpsNavigation.mostrarContinuar,
+              getInfoSegmentoActual: gpsNavigation.getInfoSegmentoActual
             }}
             todosLosNodos={mapData.getAllNodes()}
             onClose={handleCloseNavigation}
@@ -261,6 +371,7 @@ const PlanoViewer = ({ navigation }) => {
   );
 };
 
+// Estilos (mantener igual)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -318,7 +429,47 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600'
-  }
+  },
+  continuarContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  continuarButton: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  continuarIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  continuarTextContainer: {
+    flex: 1,
+  },
+  continuarText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  continuarSubtext: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
 });
 
 export default PlanoViewer;

@@ -1,6 +1,6 @@
 // AreaPolygon.jsx - ARCHIVO COMPLETO CORREGIDO
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal } from 'react-native';
 import { COLORS, ICONS } from './constants';
 import { geometryUtils } from './geometry';
 
@@ -20,33 +20,8 @@ const AreaPolygon = ({
   const displayPoints = isAdapted ? area.adaptedPoints : area.points;
   const isApproximate = area.isApproximate;
   
-  const [showName, setShowName] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const [showModal, setShowModal] = useState(false);
   const routePulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (showName) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        })
-      ]).start();
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showName, fadeAnim, scaleAnim]);
 
   useEffect(() => {
     if (isRouteNode) {
@@ -150,14 +125,14 @@ const AreaPolygon = ({
               backgroundColor: COLORS[area.tipo] || '#CCCCCC',
               borderWidth: 2 * pointScale,
               borderColor: isRouteNode ? '#007AFF' : 'white',
-              zIndex: showName ? 100 : 6,
+              zIndex: 6,
               transform: isRouteNode ? [{ scale: routePulseAnim }] : [],
             }
           ]}
         >
           <TouchableOpacity
             style={styles.areaIconTouchable}
-            onPress={() => setShowName(!showName)}
+            onPress={() => setShowModal(true)}
             activeOpacity={0.7}
           >
             <Text style={[styles.areaIcon, { fontSize: areaIconSize }]}>
@@ -178,44 +153,45 @@ const AreaPolygon = ({
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Nombre del área */}
-        {showLabels && showName && (
-          <Animated.View 
-            style={[
-              styles.areaNameContainer,
-              labelPosition,
-              {
-                opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-                zIndex: 99,
-              }
-            ]}
+        {/* Modal con información del área */}
+        <Modal
+          visible={showModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowModal(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowModal(false)}
           >
-            <View style={styles.areaNameBubble}>
-              <Text style={styles.areaName} numberOfLines={2}>
-                {area.nombre}
-              </Text>
-              {area.tipo && (
-                <Text style={styles.areaType} numberOfLines={1}>
-                  {getAreaTypeDisplayName(area.tipo)}
-                </Text>
-              )}
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalBody}>
+                <View style={styles.modalContentRow}>
+                  <Text style={styles.modalIcon}>
+                    {ICONS[area.tipo] || '📍'}
+                  </Text>
+                  <View style={styles.modalTextContainer}>
+                    <Text style={styles.modalName} numberOfLines={2}>
+                      {area.nombre}
+                    </Text>
+                    {area.tipo && (
+                      <Text style={styles.modalType}>
+                        {getAreaTypeDisplayName(area.tipo)}
+                      </Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
+                    onPress={() => setShowModal(false)}
+                  >
+                    <Text style={styles.modalCloseIcon}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-            <View style={styles.arrowDown} />
-          </Animated.View>
-        )}
-
-        {/* Nombre pequeño siempre visible */}
-        {showLabels && !showName && ['aula', 'escalera', 'bano', 'hall', 'departamento', 'area_generica', 'salida_emergencia'].includes(area.tipo) && (
-          <View style={[
-            styles.areaNameSmall,
-            labelPosition
-          ]}>
-            <Text style={styles.areaNameSmallText} numberOfLines={1}>
-              {getShortName(area.nombre, area.tipo)}
-            </Text>
-          </View>
-        )}
+          </TouchableOpacity>
+        </Modal>
       </View>
     );
   }
@@ -226,8 +202,6 @@ const AreaPolygon = ({
     const baseIconSize = 12;
     const scaledSize = baseSize * pointScale;
     const scaledIconSize = baseIconSize * pointScale;
-
-    const shouldShowFullName = ['escalera', 'salida_emergencia', 'extintor', 'botiquin', 'departamento', 'area_generica'].includes(area.tipo);
 
     return (
       <View style={styles.pointContainer}>
@@ -243,14 +217,14 @@ const AreaPolygon = ({
               backgroundColor: COLORS[area.tipo] || '#CCCCCC',
               borderWidth: 2 * pointScale,
               borderColor: isRouteNode ? '#007AFF' : (isApproximate ? '#FF9500' : 'white'),
-              zIndex: showName ? 100 : 10,
+              zIndex: 10,
               transform: isRouteNode ? [{ scale: routePulseAnim }] : [],
             }
           ]}
         >
           <TouchableOpacity
             style={styles.pointTouchable}
-            onPress={() => setShowName(!showName)}
+            onPress={() => setShowModal(true)}
             activeOpacity={0.7}
           >
             <Text style={[styles.pointIcon, { fontSize: scaledIconSize }]}>
@@ -271,50 +245,45 @@ const AreaPolygon = ({
           </TouchableOpacity>
         </Animated.View>
 
-        {showLabels && (
-          <>
-            {showName && (
-              <Animated.View 
-                style={[
-                  styles.pointNameContainer,
-                  {
-                    left: displayX - 60,
-                    top: displayY + (scaledSize / 2) + 5,
-                    opacity: fadeAnim,
-                    transform: [{ scale: scaleAnim }],
-                    zIndex: 99,
-                  }
-                ]}
-              >
-                <View style={styles.pointNameBubble}>
-                  <Text style={styles.pointName} numberOfLines={2}>
-                    {area.nombre}
+        {/* Modal con información del punto */}
+        <Modal
+          visible={showModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowModal(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowModal(false)}
+          >
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalBody}>
+                <View style={styles.modalContentRow}>
+                  <Text style={styles.modalIcon}>
+                    {ICONS[area.tipo] || '📍'}
                   </Text>
-                  {area.tipo && (
-                    <Text style={styles.pointType} numberOfLines={1}>
-                      {getAreaTypeDisplayName(area.tipo)}
+                  <View style={styles.modalTextContainer}>
+                    <Text style={styles.modalName} numberOfLines={2}>
+                      {area.nombre}
                     </Text>
-                  )}
+                    {area.tipo && (
+                      <Text style={styles.modalType}>
+                        {getAreaTypeDisplayName(area.tipo)}
+                      </Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
+                    onPress={() => setShowModal(false)}
+                  >
+                    <Text style={styles.modalCloseIcon}>✕</Text>
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.arrowUp} />
-              </Animated.View>
-            )}
-            
-            {!showName && shouldShowFullName && (
-              <View style={[
-                styles.pointNameSmall,
-                {
-                  left: displayX - 40,
-                  top: displayY + (scaledSize / 2) + 3,
-                }
-              ]}>
-                <Text style={styles.pointNameSmallText} numberOfLines={1}>
-                  {getShortName(area.nombre, area.tipo)}
-                </Text>
               </View>
-            )}
-          </>
-        )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     );
   }
@@ -615,6 +584,67 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: 'white',
     fontWeight: 'bold',
+  },
+  // Estilos del Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  modalBody: {
+    padding: 16,
+  },
+  modalContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalIcon: {
+    fontSize: 36,
+    marginRight: 12,
+  },
+  modalTextContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  modalName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+    lineHeight: 22,
+  },
+  modalType: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseIcon: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '600',
   },
 });
 

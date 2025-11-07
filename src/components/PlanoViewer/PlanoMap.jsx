@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Image,
@@ -47,6 +47,13 @@ const PlanoMap = ({
   } = useZoomPan();
 
   const [showZoomControls, setShowZoomControls] = useState(true);
+
+  // 🔥 NUEVO: Efecto para manejar cambios de plano automáticos durante navegación
+  useEffect(() => {
+    // Este efecto se mantiene vacío intencionalmente
+    // La lógica de cambio automático de plano ahora se maneja en PlanoViewer
+    // para dar más control al usuario con el botón "Continuar"
+  }, [plano, rutaActual]);
 
   // Adaptar áreas y puntos
   const adaptedAreas = areas.map(area => adaptNode(area, scale, offsetX, offsetY, plano));

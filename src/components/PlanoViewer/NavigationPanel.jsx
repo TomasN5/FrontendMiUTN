@@ -1,4 +1,4 @@
-// NavigationPanel.jsx - CÓDIGO COMPLETO MODIFICADO
+// NavigationPanel.jsx - VERSIÓN UNIFICADA
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -28,13 +28,13 @@ const NavigationPanel = ({
 }) => {
   const slideAnim = React.useRef(new Animated.Value(height)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const [selectedTab, setSelectedTab] = useState('destacados');
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showOrigenSelector, setShowOrigenSelector] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
+    destacados: true, // 🔥 NUEVO: Sección destacados expandida por defecto
     aulas: false,
     departamentos: false,
     escaleras: false,
@@ -107,13 +107,11 @@ const NavigationPanel = ({
   const getCarreraInfo = (node) => {
     if (!node) return 'General';
     
-    // Prioridad de fuentes de información de carrera
     if (node.carrera && node.carrera !== 'general') {
       return node.carrera;
     }
     
     if (node.planoId) {
-      // Extraer carrera del planoId si es posible
       const planoId = node.planoId.toLowerCase();
       if (planoId.includes('sistemas')) return 'Sistemas';
       if (planoId.includes('quimica')) return 'Química';
@@ -186,7 +184,6 @@ const NavigationPanel = ({
       const piso = node.piso || 'Sin especificar';
       const carrera = getCarreraInfo(node);
       
-      // Crear clave única que combine piso y carrera
       const clavePiso = `${piso} • ${carrera}`;
       
       if (!porPiso[clavePiso]) {
@@ -253,8 +250,6 @@ const NavigationPanel = ({
   };
 
   const handleCambiarOrigen = (nuevoOrigenId) => {
-    console.log('🔄 Cambiando origen fijo a:', nuevoOrigenId);
-    
     setOrigenFijoLocal(nuevoOrigenId);
     
     if (onOrigenFijoChange) {
@@ -269,69 +264,134 @@ const NavigationPanel = ({
     setIsAuthenticated(false);
     
     Alert.alert('✅ Origen actualizado', 'El punto de origen ha sido cambiado exitosamente');
-    
-    console.log('✅ Origen fijo actualizado correctamente');
   };
 
+  // 🔥 NUEVO: Renderizar información de segmentos de ruta
+  const renderSegmentInfo = () => {
+    if (!gpsNavigation.segmentosRuta || gpsNavigation.segmentosRuta.length <= 1) {
+      return null;
+    }
+
+    const totalSegmentos = gpsNavigation.segmentosRuta.length;
+    const segmentoActual = (gpsNavigation.segmentoActualIndex || 0) + 1;
+
+    return (
+      <View style={styles.segmentInfoContainer}>
+        <View style={styles.segmentInfoHeader}>
+          <Text style={styles.segmentInfoIcon}>🔄</Text>
+          <Text style={styles.segmentInfoTitle}>Ruta Multiplanta</Text>
+        </View>
+        <Text style={styles.segmentInfoText}>
+          La ruta está dividida en {totalSegmentos} segmentos
+        </Text>
+        <Text style={styles.segmentInfoSubtext}>
+          Usa el botón "Continuar" en el mapa para navegar entre pisos ({segmentoActual}/{totalSegmentos})
+        </Text>
+        
+        <View style={styles.segmentsList}>
+          {gpsNavigation.segmentosRuta.map((segmento, index) => (
+            <View 
+              key={index} 
+              style={[
+                styles.segmentItem,
+                index === gpsNavigation.segmentoActualIndex && styles.segmentItemActive
+              ]}
+            >
+              <View style={styles.segmentIndicator}>
+                <Text style={styles.segmentNumber}>{index + 1}</Text>
+              </View>
+              <View style={styles.segmentInfo}>
+                <Text style={styles.segmentPlano}>
+                  Plano: {segmento.planoId || 'Sin ID'}
+                </Text>
+                <Text style={styles.segmentDetails}>
+                  {segmento.nodos.length} nodos • 
+                  {segmento.tieneEscalera ? ' Con escalera' : ' Sin escalera'}
+                </Text>
+              </View>
+              {index === gpsNavigation.segmentoActualIndex && (
+                <Text style={styles.segmentCurrent}>Actual</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  // 🔥 MODIFICADO: Renderizar sección destacados unificada
   const renderDestacadosSection = () => {
     if (departamentos.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateIcon}>🏛️</Text>
-          <Text style={styles.emptyStateTitle}>No hay departamentos</Text>
-          <Text style={styles.emptyStateText}>No se encontraron departamentos disponibles</Text>
-        </View>
-      );
+      return null;
     }
 
     return (
-      <View style={styles.destacadosSection}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionTitleContainer}>
-            <Text style={styles.sectionIcon}>🏛️</Text>
-            <View>
-              <Text style={styles.sectionTitle}>Departamentos Destacados</Text>
-              <Text style={styles.sectionSubtitle}>{departamentos.length} disponibles</Text>
+      <View style={styles.categoriaSection}>
+        <TouchableOpacity 
+          style={[
+            styles.categoriaHeader,
+            expandedSections.destacados && styles.categoriaHeaderExpanded
+          ]}
+          onPress={() => toggleSection('destacados')}
+        >
+          <View style={styles.categoriaTitleContainer}>
+            <View style={[styles.categoriaIconContainer, { backgroundColor: '#2196F3' }]}>
+              <Text style={styles.categoriaIcon}>🏛️</Text>
+            </View>
+            <View style={styles.categoriaTextContainer}>
+              <Text style={styles.categoriaTitle}>Departamentos Destacados</Text>
+              <Text style={styles.categoriaSubtitle}>{departamentos.length} departamentos principales</Text>
             </View>
           </View>
-        </View>
-        
-        <View style={styles.destacadosGrid}>
-          {departamentos.map((node, index) => (
-            <TouchableOpacity
-              key={node.id}
-              style={[
-                styles.destacadoCard,
-                gpsNavigation.destino === node.id && styles.destacadoCardSelected
-              ]}
-              onPress={() => handleSelectDestino(node.id)}
-            >
-              <View style={[
-                styles.destacadoIconContainer,
-                { backgroundColor: getCardColor(node.tipo) }
-              ]}>
-                <Text style={styles.destacadoIcon}>
-                  {ICONS[node.tipo] || '🏛️'}
-                </Text>
-              </View>
-              <Text style={styles.destacadoName} numberOfLines={2}>
-                {getNombreCorto(node.nombre, node.tipo)}
-              </Text>
-              <Text style={styles.destacadoLocation} numberOfLines={1}>
-                {node.piso || 'Planta Principal'}
-              </Text>
-              {/* 🔥 AGREGADO: Mostrar carrera en departamentos destacados */}
-              <Text style={styles.destacadoCarrera} numberOfLines={1}>
-                {getCarreraInfo(node)}
-              </Text>
-              {gpsNavigation.destino === node.id && (
-                <View style={styles.selectedBadge}>
-                  <Text style={styles.selectedBadgeText}>✓</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+          <View style={[
+            styles.expandButton,
+            expandedSections.destacados && styles.expandButtonExpanded
+          ]}>
+            <Text style={styles.expandIcon}>
+              {expandedSections.destacados ? '▼' : '►'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {expandedSections.destacados && (
+          <View style={styles.categoriaContent}>
+            <View style={styles.destacadosGrid}>
+              {departamentos.map((node, index) => (
+                <TouchableOpacity
+                  key={node.id}
+                  style={[
+                    styles.destacadoCard,
+                    gpsNavigation.destino === node.id && styles.destacadoCardSelected
+                  ]}
+                  onPress={() => handleSelectDestino(node.id)}
+                >
+                  <View style={[
+                    styles.destacadoIconContainer,
+                    { backgroundColor: getCardColor(node.tipo) }
+                  ]}>
+                    <Text style={styles.destacadoIcon}>
+                      {ICONS[node.tipo] || '🏛️'}
+                    </Text>
+                  </View>
+                  <Text style={styles.destacadoName} numberOfLines={2}>
+                    {getNombreCorto(node.nombre, node.tipo)}
+                  </Text>
+                  <Text style={styles.destacadoLocation} numberOfLines={1}>
+                    {node.piso || 'Planta Principal'}
+                  </Text>
+                  <Text style={styles.destacadoCarrera} numberOfLines={1}>
+                    {getCarreraInfo(node)}
+                  </Text>
+                  {gpsNavigation.destino === node.id && (
+                    <View style={styles.selectedBadge}>
+                      <Text style={styles.selectedBadgeText}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </View>
     );
   };
@@ -377,7 +437,6 @@ const NavigationPanel = ({
               <View key={clavePiso} style={styles.pisoSection}>
                 <View style={styles.pisoHeader}>
                   <View style={styles.pisoDot} />
-                  {/* 🔥 MODIFICADO: Mostrar piso y carrera */}
                   <View style={styles.pisoTitleContainer}>
                     <Text style={styles.pisoTitle}>{dataPiso.pisoBase}</Text>
                     <Text style={styles.pisoCarrera}>{dataPiso.carrera}</Text>
@@ -421,7 +480,8 @@ const NavigationPanel = ({
     );
   };
 
-  const renderTodosOrganizados = () => {
+  // 🔥 MODIFICADO: Renderizar todas las secciones en una sola vista
+  const renderTodasLasSecciones = () => {
     if (nodosDisponibles.length === 0) {
       return (
         <View style={styles.emptyState}>
@@ -433,7 +493,11 @@ const NavigationPanel = ({
     }
 
     return (
-      <View style={styles.todosSection}>
+      <View style={styles.todasLasSecciones}>
+        {/* 🔥 DESTACADOS PRIMERO */}
+        {renderDestacadosSection()}
+        
+        {/* 🔥 TODAS LAS OTRAS CATEGORÍAS DESPUÉS */}
         {renderSeccionOrganizada('Aulas', '🏫', nodosOrganizados.aulas, 'aulas', '#4CAF50')}
         {renderSeccionOrganizada('Departamentos', '🏛️', nodosOrganizados.departamentos, 'departamentos', '#2196F3')}
         {renderSeccionOrganizada(`Escaleras`, '🪜', nodosOrganizados.escaleras, 'escaleras', '#795548')}
@@ -483,7 +547,6 @@ const NavigationPanel = ({
           </Text>
           <Text style={styles.selectedDetails}>
             {nodoInfo.piso || 'Planta Principal'}
-            {/* 🔥 AGREGADO: Mostrar carrera en nodos seleccionados */}
             {getCarreraInfo(nodoInfo) !== 'General' && ` • ${getCarreraInfo(nodoInfo)}`}
           </Text>
         </View>
@@ -530,33 +593,16 @@ const NavigationPanel = ({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, selectedTab === 'destacados' && styles.tabActive]}
-          onPress={() => setSelectedTab('destacados')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'destacados' && styles.tabTextActive]}>
-            🏛️ Destacados
-          </Text>
-          {selectedTab === 'destacados' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.tab, selectedTab === 'todos' && styles.tabActive]}
-          onPress={() => setSelectedTab('todos')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'todos' && styles.tabTextActive]}>
-            🎯 Todos
-          </Text>
-          {selectedTab === 'todos' && <View style={styles.tabIndicator} />}
-        </TouchableOpacity>
-      </View>
+      {/* 🔥 ELIMINADO: Tabs container */}
 
       <ScrollView 
         style={styles.content} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
+        {/* Información de segmentos de ruta */}
+        {renderSegmentInfo()}
+
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>📍 Punto de Partida</Text>
@@ -579,9 +625,8 @@ const NavigationPanel = ({
           {renderSelectedNode(destinoInfo, 'destino')}
         </View>
 
-        {selectedTab === 'destacados' && renderDestacadosSection()}
-        {selectedTab === 'todos' && renderTodosOrganizados()}
-
+        {/* 🔥 UNIFICADO: Todas las secciones en una vista */}
+        {renderTodasLasSecciones()}
 
       </ScrollView>
 
@@ -589,9 +634,12 @@ const NavigationPanel = ({
         <TouchableOpacity
           style={[styles.actionButton, styles.secondaryButton]}
           onPress={handleLimpiarRuta}
+          disabled={!gpsNavigation.destino}
         >
-          <Text style={styles.actionButtonIcon}>🔄</Text>
-          <Text style={styles.actionButtonText}>Limpiar</Text>
+          <Text style={styles.actionButtonIcon}>🗑️</Text>
+          <Text style={styles.actionButtonText}>
+            {gpsNavigation.destino ? 'Limpiar Destino' : 'Sin Destino'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -614,6 +662,7 @@ const NavigationPanel = ({
         </TouchableOpacity>
       </View>
 
+      {/* Modales (mantener igual) */}
       <Modal
         visible={showAdminModal}
         transparent={true}
@@ -717,7 +766,7 @@ const NavigationPanel = ({
   );
 };
 
-// FUNCIONES AUXILIARES
+// FUNCIONES AUXILIARES (mantener igual)
 const getNombreCorto = (nombre, tipo) => {
   if (!nombre) return '';
   
@@ -761,7 +810,7 @@ const getCardColor = (tipo) => {
   return colors[tipo] || '#607D8B';
 };
 
-// ESTILOS COMPLETOS CON NUEVOS ESTILOS PARA CARRERA
+// ESTILOS COMPLETOS CON CAMBIOS MINIMOS
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
@@ -820,49 +869,105 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     color: '#FFFFFF',
   },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 24,
-    marginTop: 16,
-    marginBottom: 8,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 16,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  tabActive: {
-    backgroundColor: '#FFFFFF',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  tabTextActive: {
-    color: '#007AFF',
-    fontWeight: '700',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 2,
-    width: 20,
-    height: 3,
-    backgroundColor: '#007AFF',
-    borderRadius: 2,
-  },
+  // 🔥 ELIMINADO: tabsContainer styles
   content: {
     flex: 1,
   },
   contentContainer: {
     padding: 24,
     paddingTop: 16,
+  },
+  // 🔥 NUEVO: Contenedor para todas las secciones
+  todasLasSecciones: {
+    marginTop: 8,
+  },
+  // ... el resto de los estilos se mantienen igual ...
+  // (segmentInfoContainer, card, selectedNode, categoriaSection, etc.)
+  segmentInfoContainer: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#DBEAFE',
+  },
+  segmentInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  segmentInfoIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  segmentInfoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E40AF',
+  },
+  segmentInfoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  segmentInfoSubtext: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 12,
+  },
+  segmentsList: {
+    marginTop: 8,
+  },
+  segmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  segmentItemActive: {
+    backgroundColor: '#F0F9FF',
+    borderColor: '#007AFF',
+  },
+  segmentIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  segmentNumber: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  segmentInfo: {
+    flex: 1,
+  },
+  segmentPlano: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  segmentDetails: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  segmentCurrent: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#007AFF',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -987,90 +1092,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9CA3AF',
   },
-  destacadosSection: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sectionIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  destacadosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  destacadoCard: {
-    width: (width - 72) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#F3F4F6',
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  destacadoCardSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#F0F9FF',
-    transform: [{ scale: 1.02 }],
-  },
-  destacadoIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    alignSelf: 'center',
-  },
-  destacadoIcon: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  destacadoName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 6,
-    minHeight: 36,
-  },
-  destacadoLocation: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  // 🔥 NUEVO: Estilo para mostrar carrera en departamentos destacados
-  destacadoCarrera: {
-    fontSize: 11,
-    color: '#007AFF',
-    fontWeight: '500',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
   categoriaSection: {
     marginBottom: 16,
     backgroundColor: '#FFFFFF',
@@ -1144,6 +1165,65 @@ const styles = StyleSheet.create({
   categoriaContent: {
     padding: 16,
   },
+  destacadosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  destacadoCard: {
+    width: (width - 72) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  destacadoCardSelected: {
+    borderColor: '#007AFF',
+    backgroundColor: '#F0F9FF',
+    transform: [{ scale: 1.02 }],
+  },
+  destacadoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
+  destacadoIcon: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  destacadoName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 6,
+    minHeight: 36,
+  },
+  destacadoLocation: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  destacadoCarrera: {
+    fontSize: 11,
+    color: '#007AFF',
+    fontWeight: '500',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   pisoSection: {
     marginBottom: 16,
   },
@@ -1160,7 +1240,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     marginRight: 8,
   },
-  // 🔥 NUEVO: Contenedor para título de piso y carrera
   pisoTitleContainer: {
     flex: 1,
   },
@@ -1169,7 +1248,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#374151',
   },
-  // 🔥 NUEVO: Estilo para mostrar carrera debajo del piso
   pisoCarrera: {
     fontSize: 12,
     color: '#007AFF',
@@ -1285,31 +1363,6 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 20,
-  },
-  adminSection: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 16,
-  },
-  adminButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  adminButtonIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  adminButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
   },
   actions: {
     flexDirection: 'row',
