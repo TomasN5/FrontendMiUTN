@@ -163,6 +163,20 @@ const PlanoViewer = ({ navigation }) => {
     handleCloseNavigation();
   };
 
+  // 🔥 NUEVO: Función para iniciar navegación desde un item del mapa
+  const handleStartNavigation = async (destinationId) => {
+    // Usar la función que establece el destino y calcula la ruta en una sola operación
+    if (gpsNavigation.setDestinoYCalcularRuta) {
+      await gpsNavigation.setDestinoYCalcularRuta(destinationId);
+    } else if (gpsNavigation.calcularRuta) {
+      // Fallback: pasar el destino directamente a calcularRuta
+      await gpsNavigation.calcularRuta(destinationId, gpsNavigation.origen);
+      if (gpsNavigation.setDestino) {
+        gpsNavigation.setDestino(destinationId);
+      }
+    }
+  };
+
   const handleToggleControlPanel = () => {
     setShowControlPanel(!showControlPanel);
   };
@@ -299,6 +313,7 @@ const PlanoViewer = ({ navigation }) => {
           onToggleControlPanel={handleToggleControlPanel}
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
+          onStartNavigation={handleStartNavigation}
         />
         
         {/* 🔥 MEJORADO: Botón Continuar con información de carrera */}

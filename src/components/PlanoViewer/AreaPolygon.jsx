@@ -11,7 +11,8 @@ const AreaPolygon = ({
   showLabels = true,
   isRouteNode = false,
   isRouteStart = false,
-  isRouteEnd = false 
+  isRouteEnd = false,
+  onStartNavigation
 }) => {
   if (!area) return null;
 
@@ -204,6 +205,21 @@ const AreaPolygon = ({
                     <Text style={styles.modalCloseIcon}>✕</Text>
                   </TouchableOpacity>
                 </View>
+                {/* 🔥 NUEVO: Botón de navegación para áreas */}
+                {onStartNavigation && (
+                  <TouchableOpacity
+                    style={styles.navigationButton}
+                    onPress={() => {
+                      if (onStartNavigation && area.id) {
+                        onStartNavigation(area.id);
+                        setShowModal(false);
+                      }
+                    }}
+                  >
+                    <Text style={styles.navigationButtonIcon}>🧭</Text>
+                    <Text style={styles.navigationButtonText}>Iniciar navegación</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </TouchableOpacity>
@@ -312,6 +328,21 @@ const AreaPolygon = ({
                     <Text style={styles.modalCloseIcon}>✕</Text>
                   </TouchableOpacity>
                 </View>
+                {/* 🔥 NUEVO: Botón de navegación para puntos */}
+                {onStartNavigation && (
+                  <TouchableOpacity
+                    style={styles.navigationButton}
+                    onPress={() => {
+                      if (onStartNavigation && area.id) {
+                        onStartNavigation(area.id);
+                        setShowModal(false);
+                      }
+                    }}
+                  >
+                    <Text style={styles.navigationButtonIcon}>🧭</Text>
+                    <Text style={styles.navigationButtonText}>Iniciar navegación</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </TouchableOpacity>
@@ -677,6 +708,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     fontWeight: '600',
+  },
+  // 🔥 NUEVO: Estilos para botón de navegación
+  navigationButton: {
+    marginTop: 16,
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  navigationButtonIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  navigationButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
   },
   // Estilos para "Usted está aquí"
   youAreHereContainer: {

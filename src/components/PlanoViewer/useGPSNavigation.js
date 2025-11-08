@@ -244,8 +244,11 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
   }, [getAllNodes]);
 
   // 🔥 MODIFICADO: calcularRuta con información mejorada de planos
-  const calcularRuta = useCallback(async () => {
-    if (!origen || !destino) {
+  const calcularRuta = useCallback(async (destinoParam = null, origenParam = null) => {
+    const destinoFinal = destinoParam !== null ? destinoParam : destino;
+    const origenFinal = origenParam !== null ? origenParam : origen;
+    
+    if (!origenFinal || !destinoFinal) {
       Alert.alert("Error", "Selecciona origen y destino");
       return;
     }
@@ -260,7 +263,7 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
         return;
       }
       
-      const rutaIds = findShortestPath(graph, origen, destino);
+      const rutaIds = findShortestPath(graph, origenFinal, destinoFinal);
       
       if (rutaIds.length > 0) {
         const rutaNodos = getRouteNodes(rutaIds);
@@ -304,6 +307,13 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
       setIsCalculando(false);
     }
   }, [origen, destino, buildGraphWithExplicitConnections, findShortestPath, getRouteNodes, dividirRutaPorPlanos]);
+  
+  // 🔥 NUEVO: Función para establecer destino y calcular ruta en una sola operación
+  const setDestinoYCalcularRuta = useCallback(async (nuevoDestino) => {
+    setDestino(nuevoDestino);
+    // Usar setTimeout para asegurar que el estado se actualice, o mejor aún, pasar el destino directamente
+    await calcularRuta(nuevoDestino, origen);
+  }, [calcularRuta, origen]);
 
   // 🔥 NUEVA FUNCIÓN: Obtener plano por ID para cambiar
   const getPlanoParaCambiar = useCallback((planoId) => {
@@ -433,6 +443,7 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
     setOrigen,
     setDestino,
     calcularRuta,
+    setDestinoYCalcularRuta,
     limpiarRuta,
     graphConnections: generateGraphConnections(),
     getGraphConnectionsForPlano,

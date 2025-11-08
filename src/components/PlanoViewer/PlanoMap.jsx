@@ -25,7 +25,8 @@ const PlanoMap = ({
   showNavigationPanel = false,
   onToggleControlPanel,
   showBackButton = false,
-  onBackPress
+  onBackPress,
+  onStartNavigation
 }) => {
   const { 
     adaptNode, 
@@ -235,6 +236,7 @@ const PlanoMap = ({
                   isRouteNode={routeInfo.isRouteNode}
                   isRouteStart={routeInfo.isRouteStart}
                   isRouteEnd={routeInfo.isRouteEnd}
+                  onStartNavigation={onStartNavigation}
                 />
               );
             })}
@@ -247,6 +249,7 @@ const PlanoMap = ({
                 return (
                   <AreaPolygon
                     key={punto.id}
+                    onStartNavigation={onStartNavigation}
                     area={punto}
                     isAdapted={true}
                     pointScale={punto.pointScale || 1}
