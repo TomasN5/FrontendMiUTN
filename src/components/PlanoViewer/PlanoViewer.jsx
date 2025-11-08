@@ -311,9 +311,25 @@ const PlanoViewer = ({ navigation }) => {
           getRouteNodes={gpsNavigation.getRouteNodes}
           showNavigationPanel={showNavigationPanel}
           onToggleControlPanel={handleToggleControlPanel}
+          showControlPanel={showControlPanel}
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
           onStartNavigation={handleStartNavigation}
+          rutaCompleta={gpsNavigation.rutaCompleta}
+          segmentosRuta={gpsNavigation.segmentosRuta}
+          onCancelarViaje={() => {
+            // Limpiar la ruta
+            if (gpsNavigation.limpiarRuta) {
+              gpsNavigation.limpiarRuta();
+            }
+            // Volver al mapa general
+            if (planoManager.cambiarCarrera) {
+              planoManager.cambiarCarrera('general');
+            }
+            if (planoManager.inicializarPlanosCarrera) {
+              planoManager.inicializarPlanosCarrera('general');
+            }
+          }}
         />
         
         {/* 🔥 MEJORADO: Botón Continuar con información de carrera */}
@@ -323,7 +339,6 @@ const PlanoViewer = ({ navigation }) => {
               style={styles.continuarButton}
               onPress={handleContinuar}
             >
-              <Text style={styles.continuarIcon}>⬇️</Text>
               <View style={styles.continuarTextContainer}>
                 <Text style={styles.continuarText}>
                   {getContinuarButtonText()}
@@ -363,6 +378,7 @@ const PlanoViewer = ({ navigation }) => {
               origen: gpsNavigation.origen,
               destino: gpsNavigation.destino,
               rutaActual: gpsNavigation.rutaActual,
+              rutaCompleta: gpsNavigation.rutaCompleta,
               isCalculando: gpsNavigation.isCalculando,
               setOrigen: gpsNavigation.setOrigen,
               setDestino: gpsNavigation.setDestino,
@@ -456,34 +472,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderRadius: 24,
+    shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 15,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  continuarIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
   },
   continuarTextContainer: {
     flex: 1,
   },
   continuarText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 2,
+    marginBottom: 3,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   continuarSubtext: {
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 12,
     fontWeight: '500',
+    letterSpacing: 0.3,
   },
 });
 

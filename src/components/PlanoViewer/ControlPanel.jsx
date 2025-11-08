@@ -91,7 +91,6 @@ const ControlPanel = ({
         style={styles.navButton}
         onPress={onShowNavigation}
       >
-        <Text style={styles.navButtonIcon}>🧭</Text>
         <Text style={styles.navButtonText}>Iniciar Navegación</Text>
       </TouchableOpacity>
 

@@ -24,9 +24,13 @@ const PlanoMap = ({
   getGraphConnectionsForPlano,
   showNavigationPanel = false,
   onToggleControlPanel,
+  showControlPanel = false,
   showBackButton = false,
   onBackPress,
-  onStartNavigation
+  onStartNavigation,
+  rutaCompleta = [],
+  segmentosRuta = [],
+  onCancelarViaje
 }) => {
   const { 
     adaptNode, 
@@ -295,8 +299,22 @@ const PlanoMap = ({
             style={styles.panelButton}
             onPress={onToggleControlPanel}
           >
-            <Text style={styles.panelButtonText}>Navegar</Text>
+            <Text style={styles.panelButtonText}>
+              {showControlPanel ? 'Ocultar' : 'Navegar'}
+            </Text>
           </TouchableOpacity>
+
+          {/* 🔥 NUEVO: Botón para cancelar viaje cuando hay una ruta activa */}
+          {((rutaActual && rutaActual.length > 0) ||
+            (rutaCompleta && rutaCompleta.length > 0) ||
+            (segmentosRuta && segmentosRuta.length > 0)) && (
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={onCancelarViaje}
+            >
+              <Text style={styles.cancelButtonText}>Terminar</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
@@ -397,6 +415,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#007AFF',
+  },
+  cancelButton: {
+    width: 140,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   zoomControls: {
     flexDirection: 'row',

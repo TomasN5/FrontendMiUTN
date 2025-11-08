@@ -1,6 +1,6 @@
 // AreaPolygon.jsx - ARCHIVO COMPLETO CORREGIDO
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { COLORS, ICONS } from './constants';
 import { geometryUtils } from './geometry';
 
@@ -22,27 +22,6 @@ const AreaPolygon = ({
   const isApproximate = area.isApproximate;
   
   const [showModal, setShowModal] = useState(false);
-  const routePulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (isRouteNode) {
-      // Animación de pulso para nodos en la ruta
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(routePulseAnim, {
-            toValue: 1.3,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(routePulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          })
-        ])
-      ).start();
-    }
-  }, [isRouteNode, routePulseAnim]);
 
   // Si es un área con puntos (polígono)
   if (displayPoints && displayPoints.length >= 3) {
@@ -114,7 +93,7 @@ const AreaPolygon = ({
         </View>
 
         {/* Ícono en el centro del área */}
-        <Animated.View
+        <View
           style={[
             styles.areaIconContainer,
             { 
@@ -124,10 +103,14 @@ const AreaPolygon = ({
               height: areaScaledSize,
               borderRadius: areaScaledSize / 2,
               backgroundColor: COLORS[area.tipo] || '#CCCCCC',
-              borderWidth: 2 * pointScale,
-              borderColor: isRouteNode ? '#007AFF' : 'white',
-              zIndex: 6,
-              transform: isRouteNode ? [{ scale: routePulseAnim }] : [],
+              borderWidth: isRouteEnd ? 4 * pointScale : (isRouteNode ? 2 * pointScale : 2 * pointScale),
+              borderColor: isRouteEnd ? '#FF3B30' : (isRouteNode ? '#007AFF' : 'white'),
+              zIndex: isRouteEnd ? 15 : 6,
+              shadowColor: isRouteEnd ? '#FF3B30' : 'transparent',
+              shadowOffset: isRouteEnd ? { width: 0, height: 4 } : { width: 0, height: 0 },
+              shadowOpacity: isRouteEnd ? 0.8 : 0,
+              shadowRadius: isRouteEnd ? 10 : 0,
+              elevation: isRouteEnd ? 10 : 0,
             }
           ]}
         >
@@ -141,18 +124,13 @@ const AreaPolygon = ({
             </Text>
             {isApproximate && <View style={[styles.approximateDot, { width: 6 * pointScale, height: 6 * pointScale }]} />}
             
-            {(isRouteStart || isRouteEnd) && (
-              <View style={[
-                styles.routeIndicator,
-                isRouteStart ? styles.routeStartIndicator : styles.routeEndIndicator
-              ]}>
-                <Text style={styles.routeIndicatorText}>
-                  {isRouteStart ? '🏁' : '🎯'}
-                </Text>
+            {isRouteEnd && (
+              <View style={styles.routeEndIndicator}>
+                <Text style={styles.routeIndicatorText}>🏁</Text>
               </View>
             )}
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* Distintivo "Usted está aquí" para el totem */}
         {area.tipo === 'totem' && (
@@ -216,7 +194,6 @@ const AreaPolygon = ({
                       }
                     }}
                   >
-                    <Text style={styles.navigationButtonIcon}>🧭</Text>
                     <Text style={styles.navigationButtonText}>Iniciar navegación</Text>
                   </TouchableOpacity>
                 )}
@@ -237,7 +214,7 @@ const AreaPolygon = ({
 
     return (
       <View style={styles.pointContainer}>
-        <Animated.View
+        <View
           style={[
             styles.point,
             { 
@@ -247,10 +224,14 @@ const AreaPolygon = ({
               height: scaledSize,
               borderRadius: scaledSize / 2,
               backgroundColor: COLORS[area.tipo] || '#CCCCCC',
-              borderWidth: 2 * pointScale,
-              borderColor: isRouteNode ? '#007AFF' : (isApproximate ? '#FF9500' : 'white'),
-              zIndex: 10,
-              transform: isRouteNode ? [{ scale: routePulseAnim }] : [],
+              borderWidth: isRouteEnd ? 4 * pointScale : (isRouteNode ? 2 * pointScale : 2 * pointScale),
+              borderColor: isRouteEnd ? '#FF3B30' : (isRouteNode ? '#007AFF' : (isApproximate ? '#FF9500' : 'white')),
+              zIndex: isRouteEnd ? 15 : 10,
+              shadowColor: isRouteEnd ? '#FF3B30' : 'transparent',
+              shadowOffset: isRouteEnd ? { width: 0, height: 4 } : { width: 0, height: 0 },
+              shadowOpacity: isRouteEnd ? 0.8 : 0,
+              shadowRadius: isRouteEnd ? 10 : 0,
+              elevation: isRouteEnd ? 10 : 0,
             }
           ]}
         >
@@ -264,18 +245,13 @@ const AreaPolygon = ({
             </Text>
             {isApproximate && <View style={[styles.approximateDot, { width: 6 * pointScale, height: 6 * pointScale }]} />}
             
-            {(isRouteStart || isRouteEnd) && (
-              <View style={[
-                styles.routeIndicator,
-                isRouteStart ? styles.routeStartIndicator : styles.routeEndIndicator
-              ]}>
-                <Text style={styles.routeIndicatorText}>
-                  {isRouteStart ? '🏁' : '🎯'}
-                </Text>
+            {isRouteEnd && (
+              <View style={styles.routeEndIndicator}>
+                <Text style={styles.routeIndicatorText}>🏁</Text>
               </View>
             )}
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* Distintivo "Usted está aquí" para el totem */}
         {area.tipo === 'totem' && (
@@ -641,12 +617,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CD964',
   },
   routeEndIndicator: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#FF3B30',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+    zIndex: 25,
   },
   routeIndicatorText: {
-    fontSize: 8,
+    fontSize: 14,
     color: 'white',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   // Estilos del Modal
   modalOverlay: {

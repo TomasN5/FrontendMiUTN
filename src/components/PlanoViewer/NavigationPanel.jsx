@@ -658,6 +658,7 @@ const NavigationPanel = ({
             </>
           )}
         </TouchableOpacity>
+
       </View>
 
       {/* Modales (mantener igual) */}
@@ -1393,6 +1394,14 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: '#D1D5DB',
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 16,
   },
   actionButtonIcon: {
     fontSize: 18,
