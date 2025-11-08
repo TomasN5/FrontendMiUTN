@@ -212,11 +212,11 @@ const styles = StyleSheet.create({
   },
   locationIconContainer: {
     position: 'absolute',
-    bottom: 60, // Colocado arriba del email
+    bottom: 65, // Colocado arriba del email
     right: 10,
     padding: 8,
     borderRadius: 20,
-    backgroundColor: COLORS.success,
+    backgroundColor: '#006cdfff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: "#000",
@@ -230,9 +230,10 @@ const styles = StyleSheet.create({
     minWidth: 48,
     minHeight: 48,
   },
-  locationEmoji: {
-    fontSize: 24,
-    textAlign: 'center',
+  locationIcon: {
+    width: 32,
+    height: 32,
+    tintColor: COLORS.white,
   },
 });
 

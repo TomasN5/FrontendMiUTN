@@ -29,8 +29,9 @@ import {
 // Importar estilos
 import styles, { COLORS } from './SubjectsScreen.css.js';
 
-// Importar imagen
+// Importar imágenes
 const mailIcon = require('../assets/images/mail.png');
+const mapaIcon = require('../assets/images/mapa-icon.png');
 
 const mail = "professor@frlp.utn.edu.ar";
 
@@ -458,12 +459,16 @@ const SubjectsScreen = ({ navigation }) => {
                       </View>
                     </View>
                     
-                    {/* Botón de ubicación con emoji (brújula) */}
+                    {/* Botón de ubicación con ícono de mapa */}
                     <TouchableOpacity 
                       style={styles.locationIconContainer} 
                       onPress={() => navigateToClassroom(materia.aula, materia.nombre)}
                     >
-                      <Text style={styles.locationEmoji}>🧭</Text>
+                      <Image 
+                        source={mapaIcon} 
+                        style={styles.locationIcon}
+                        resizeMode="contain"
+                      />
                     </TouchableOpacity>
                     
                     {/* Botón de email (existente) */}
