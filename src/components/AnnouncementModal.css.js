@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
   },
   /* Estilos para contenido del anuncio */
   announcementContent: {
-    flex: 1,
     padding: 24,
     paddingBottom: 28,
   },
@@ -174,7 +173,7 @@ const styles = StyleSheet.create({
   },
   /* Estilos para descripción */
   descriptionSection: {
-    flex: 1,
+    marginTop: 8,
   },
   fullDescriptionText: {
     fontSize: 17,

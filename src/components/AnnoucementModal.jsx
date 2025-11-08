@@ -162,8 +162,9 @@ const AnnouncementModal = ({
             {/* Contenido scrollable */}
             <ScrollView 
               style={styles.content}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               contentContainerStyle={styles.scrollContent}
+              nestedScrollEnabled={true}
             >
               
               {/* Contenido del anuncio con imagen y texto */}
@@ -201,14 +202,16 @@ const AnnouncementModal = ({
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <Image 
-                        source={{ 
-                          uri: imageUrl || announcement.imageUrl || 'https://via.placeholder.com/300x200' 
-                        }}
-                        style={styles.announcementImage}
-                        resizeMode="cover"
-                        onError={() => setImageError(true)}
-                      />
+                      <View style={styles.imageContainer}>
+                        <Image 
+                          source={{ 
+                            uri: imageUrl || announcement.imageUrl || 'https://via.placeholder.com/300x200' 
+                          }}
+                          style={styles.announcementImage}
+                          resizeMode="cover"
+                          onError={() => setImageError(true)}
+                        />
+                      </View>
                     )}
                   </View>
                 )}
