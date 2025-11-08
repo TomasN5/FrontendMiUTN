@@ -210,6 +210,30 @@ const styles = StyleSheet.create({
     height: 32,
     tintColor: COLORS.white,
   },
+  locationIconContainer: {
+    position: 'absolute',
+    bottom: 60, // Colocado arriba del email
+    right: 10,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minWidth: 48,
+    minHeight: 48,
+  },
+  locationEmoji: {
+    fontSize: 24,
+    textAlign: 'center',
+  },
 });
 
 export default styles;

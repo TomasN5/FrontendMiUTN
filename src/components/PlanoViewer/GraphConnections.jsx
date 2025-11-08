@@ -1,3 +1,4 @@
+// GraphConnections.jsx - VERSIÓN CON PUNTOS MÁS PEQUEÑOS
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 
@@ -35,7 +36,7 @@ const GraphConnections = ({
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.2,
+          toValue: 1.1, // 🔥 REDUCIDO: Pulso más sutil
           duration: 1000,
           useNativeDriver: true,
         }),
@@ -62,12 +63,9 @@ const GraphConnections = ({
     return nodePlano === planoActual.id;
   };
 
-  // 🔥 Verificar si un nodo es especial (NO debe tener punto azul animado)
-
   const isSpecialNode = (node) => {
     if (!node || !node.tipo) return false;
     
-    // Tipos de nodos especiales que NO deben tener puntos azules animados
     const specialTypes = [
       'escalera', 'bano', 'hall', 'departamento', 'area_generica',
       'extintor', 'salida_emergencia', 'botiquin', 'desfibrilador', 
@@ -76,7 +74,7 @@ const GraphConnections = ({
     
     return specialTypes.includes(node.tipo);
   };
-  // 🔥 PUNTOS AZULES SOLO PARA NODOS NO ESPECIALES
+
   const renderRouteDots = () => {
     if (rutaActual.length < 2 || !showRoute) return null;
 
@@ -89,11 +87,9 @@ const GraphConnections = ({
       const coords = getNodeCoordinates(node);
       if (!coords) continue;
 
-      // Solo puntos intermedios (no inicio ni fin)
       const isIntermediate = i > 0 && i < rutaActual.length - 1;
       
       if (isIntermediate) {
-        // 🔥 VERIFICAR: Si es nodo especial, NO crear punto azul
         const isSpecial = isSpecialNode(node);
         
         if (!isSpecial) {
@@ -105,8 +101,8 @@ const GraphConnections = ({
               style={[
                 styles.routeDot,
                 {
-                  left: coords.x - 4,
-                  top: coords.y - 4,
+                  left: coords.x - 3, // 🔥 REDUCIDO: Ajuste de posición
+                  top: coords.y - 3, // 🔥 REDUCIDO: Ajuste de posición
                   opacity: pathProgress.interpolate({
                     inputRange: [0, progressThreshold, Math.min(progressThreshold + 0.1, 1)],
                     outputRange: [0, 0, 1]
@@ -116,14 +112,12 @@ const GraphConnections = ({
             />
           );
         }
-        // 🔥 Si es nodo especial (matafuego, desfibrilador, etc.), NO se crea punto azul
       }
     }
 
     return routeDots;
   };
 
-  // 🔥 PUNTOS ESPECIALES ANIMADOS SOLO INICIO Y FINAL
   const renderSpecialNodes = () => {
     if (rutaActual.length === 0) return null;
 
@@ -140,8 +134,8 @@ const GraphConnections = ({
             style={[
               styles.origenNode,
               {
-                left: coords.x - 15,
-                top: coords.y - 15,
+                left: coords.x - 12, // 🔥 REDUCIDO: Tamaño más pequeño
+                top: coords.y - 12, // 🔥 REDUCIDO: Tamaño más pequeño
                 transform: [{ scale: pulseAnim }]
               }
             ]}
@@ -164,8 +158,8 @@ const GraphConnections = ({
             style={[
               styles.destinoNode,
               {
-                left: coords.x - 20,
-                top: coords.y - 20,
+                left: coords.x - 16, // 🔥 REDUCIDO: Tamaño más pequeño
+                top: coords.y - 16, // 🔥 REDUCIDO: Tamaño más pequeño
                 transform: [{ scale: pulseAnim }]
               }
             ]}
@@ -196,6 +190,7 @@ const GraphConnections = ({
   );
 };
 
+// 🔥 MEJORADO: Estilos con elementos más pequeños y prolijos
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
@@ -205,76 +200,76 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 8,
   },
-  // 🔥 PUNTOS AZULES DE LA RUTA (solo para nodos NO especiales)
+  // 🔥 PUNTOS AZULES DE LA RUTA (más pequeños)
   routeDot: {
     position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6, // 🔥 REDUCIDO: Punto más pequeño
+    height: 6, // 🔥 REDUCIDO: Punto más pequeño
+    borderRadius: 3, // 🔥 REDUCIDO: Borde más pequeño
     backgroundColor: '#007AFF',
     borderWidth: 1,
     borderColor: 'white',
     zIndex: 11,
     shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 3,
+    shadowOpacity: 0.6, // 🔥 REDUCIDO: Sombra más sutil
+    shadowRadius: 1.5, // 🔥 REDUCIDO: Sombra más sutil
+    elevation: 2, // 🔥 REDUCIDO: Elevación más sutil
   },
-  // 🔥 PUNTOS ESPECIALES ANIMADOS (SOLO INICIO Y FINAL)
+  // 🔥 PUNTOS ESPECIALES ANIMADOS (más pequeños)
   origenNode: {
     position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(76, 217, 100, 0.2)',
+    width: 24, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 24, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 12, // 🔥 REDUCIDO: Borde más pequeño
+    backgroundColor: 'rgba(76, 217, 100, 0.15)', // 🔥 REDUCIDO: Transparencia más sutil
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 12,
   },
   origenNodeInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 10, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 5, // 🔥 REDUCIDO: Borde más pequeño
     backgroundColor: '#4CD964',
-    borderWidth: 2,
+    borderWidth: 1.5, // 🔥 REDUCIDO: Borde más fino
     borderColor: 'white',
   },
   origenNodePulse: {
     position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
+    width: 24, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 24, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 12, // 🔥 REDUCIDO: Borde más pequeño
+    borderWidth: 1.5, // 🔥 REDUCIDO: Borde más fino
     borderColor: '#4CD964',
-    opacity: 0.5,
+    opacity: 0.4, // 🔥 REDUCIDO: Transparencia más sutil
   },
   destinoNode: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    width: 32, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 32, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 16, // 🔥 REDUCIDO: Borde más pequeño
+    backgroundColor: 'rgba(255, 59, 48, 0.15)', // 🔥 REDUCIDO: Transparencia más sutil
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 12,
   },
   destinoNodeInner: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 12, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 12, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 6, // 🔥 REDUCIDO: Borde más pequeño
     backgroundColor: '#FF3B30',
-    borderWidth: 2,
+    borderWidth: 1.5, // 🔥 REDUCIDO: Borde más fino
     borderColor: 'white',
   },
   destinoNodePulse: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
+    width: 32, // 🔥 REDUCIDO: Tamaño más pequeño
+    height: 32, // 🔥 REDUCIDO: Tamaño más pequeño
+    borderRadius: 16, // 🔥 REDUCIDO: Borde más pequeño
+    borderWidth: 1.5, // 🔥 REDUCIDO: Borde más fino
     borderColor: '#FF3B30',
-    opacity: 0.5,
+    opacity: 0.4, // 🔥 REDUCIDO: Transparencia más sutil
   },
 });
 

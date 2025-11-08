@@ -1,4 +1,4 @@
-// PlanoViewer.jsx - VERSIÓN CORREGIDA PARA CAMBIOS ENTRE CARRERAS
+// PlanoViewer.jsx - VERSIÓN COMPLETA ACTUALIZADA PARA RECIBIR PARÁMETROS
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  Animated
+  Animated,
+  Alert
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { usePlanoManager } from './usePlanoManager';
@@ -17,7 +18,7 @@ import PlanoMap from './PlanoMap';
 import ControlPanel from './ControlPanel';
 import NavigationPanel from './NavigationPanel';
 
-const PlanoViewer = ({ navigation }) => {
+const PlanoViewer = ({ navigation, route }) => {
   const planoManager = usePlanoManager();
   const mapData = useMapData();
   const gpsNavigation = useGPSNavigation(mapData.areas, mapData.puntos, mapData.planos);
@@ -29,6 +30,9 @@ const PlanoViewer = ({ navigation }) => {
   const [origenFijo, setOrigenFijo] = useState(null);
   const [showContinuarButton, setShowContinuarButton] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
+
+  // 🔥 NUEVO: Obtener parámetros de navegación
+  const { aulaDestino, materiaNombre, carrera } = route.params || {};
 
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
@@ -66,6 +70,13 @@ const PlanoViewer = ({ navigation }) => {
       }
     }
   }, [gpsNavigation.mostrarContinuar, gpsNavigation.getInfoSegmentoActual, planoManager]);
+
+  // 🔥 NUEVO: Buscar automáticamente el aula destino cuando lleguen los parámetros
+  useEffect(() => {
+    if (aulaDestino && mapData.getAllNodes && !mapData.loading && origenFijo) {
+      buscarAulaYCalcularRuta(aulaDestino, materiaNombre);
+    }
+  }, [aulaDestino, mapData.getAllNodes, mapData.loading, origenFijo]);
 
   // 🔥 NUEVO: Mostrar/ocultar botón continuar
   useEffect(() => {
@@ -146,6 +157,81 @@ const PlanoViewer = ({ navigation }) => {
       buscarYEstablecerOrigenFijo();
     }
   }, [mapData.getAllNodes, mapData.loading, origenFijo, gpsNavigation.setOrigen]);
+
+  // 🔥 NUEVA FUNCIÓN: Buscar aula y calcular ruta automáticamente
+  const buscarAulaYCalcularRuta = async (aulaBuscada, materia) => {
+    try {
+      if (!mapData.getAllNodes) {
+        Alert.alert('Error', 'Datos del mapa no disponibles');
+        return;
+      }
+
+      const todosLosNodos = mapData.getAllNodes();
+      
+      // Buscar el aula por nombre (diferentes variaciones)
+      const aulaEncontrada = todosLosNodos.find(node => 
+        node && 
+        node.tipo === 'aula' && 
+        node.nombre && 
+        (
+          node.nombre.toLowerCase().includes(aulaBuscada.toLowerCase()) ||
+          node.nombre.toLowerCase().replace(/\s/g, '').includes(aulaBuscada.toLowerCase().replace(/\s/g, '')) ||
+          (aulaBuscada.toLowerCase().includes(node.nombre.toLowerCase()) && node.nombre.length > 2)
+        )
+      );
+
+      if (!aulaEncontrada) {
+        // Buscar más ampliamente
+        const aulasCercanas = todosLosNodos.filter(node => 
+          node && 
+          node.tipo === 'aula' && 
+          node.nombre
+        );
+
+        Alert.alert(
+          'Aula no encontrada', 
+          `No se pudo encontrar el aula "${aulaBuscada}" en el mapa.\n\nMateria: ${materia || 'No especificada'}\n\nPuedes buscar manualmente en el panel de navegación.`,
+          [
+            { 
+              text: 'Buscar Manualmente', 
+              onPress: () => setShowNavigationPanel(true) 
+            },
+            { 
+              text: 'Cancelar', 
+              style: 'cancel' 
+            }
+          ]
+        );
+        return;
+      }
+
+      // Mostrar información del aula encontrada
+      console.log('🎯 Aula encontrada:', {
+        nombre: aulaEncontrada.nombre,
+        id: aulaEncontrada.id,
+        tipo: aulaEncontrada.tipo,
+        plano: aulaEncontrada.planoId
+      });
+
+      // Establecer el destino y calcular ruta
+      if (gpsNavigation.setDestinoYCalcularRuta) {
+        await gpsNavigation.setDestinoYCalcularRuta(aulaEncontrada.id);
+        
+      } else if (gpsNavigation.calcularRuta) {
+        gpsNavigation.setDestino(aulaEncontrada.id);
+        await gpsNavigation.calcularRuta();
+        
+      }
+
+    } catch (error) {
+      console.error('Error buscando aula:', error);
+      Alert.alert(
+        'Error', 
+        `No se pudo calcular la ruta al aula "${aulaBuscada}"\n\nError: ${error.message}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   const handleShowNavigation = () => {
     setShowNavigationPanel(true);
@@ -256,6 +342,20 @@ const PlanoViewer = ({ navigation }) => {
     }
   };
 
+  // 🔥 NUEVO: Mostrar información del destino actual si viene de SubjectsScreen
+  const renderDestinoInfo = () => {
+    if (!aulaDestino || !materiaNombre) return null;
+
+    return (
+      <View style={styles.destinoInfoContainer}>
+        <Text style={styles.destinoInfoTitle}>🎯 Destino Actual</Text>
+        <Text style={styles.destinoInfoText}>Aula: {aulaDestino}</Text>
+        <Text style={styles.destinoInfoText}>Materia: {materiaNombre}</Text>
+        {carrera && <Text style={styles.destinoInfoText}>Carrera: {carrera}</Text>}
+      </View>
+    );
+  };
+
   if (mapData.loading) {
     return (
       <SafeAreaProvider>
@@ -264,6 +364,11 @@ const PlanoViewer = ({ navigation }) => {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text style={styles.loadingText}>Cargando mapa...</Text>
+            {aulaDestino && (
+              <Text style={styles.loadingSubtext}>
+                Buscando aula: {aulaDestino}
+              </Text>
+            )}
           </View>
         </SafeAreaView>
       </SafeAreaProvider>
@@ -300,6 +405,9 @@ const PlanoViewer = ({ navigation }) => {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <StatusBar barStyle="dark-content" />
+        
+        {/* 🔥 NUEVO: Información del destino */}
+   
         
         <PlanoMap
           plano={planoManager.planoActual}
@@ -402,11 +510,40 @@ const PlanoViewer = ({ navigation }) => {
   );
 };
 
-// Estilos (mantener igual)
+// Estilos actualizados
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5'
+  },
+  // 🔥 NUEVO: Estilos para información del destino
+  destinoInfoContainer: {
+    position: 'absolute',
+    top: 10,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  destinoInfoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginBottom: 6,
+  },
+  destinoInfoText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 2,
   },
   backButtonError: {
     backgroundColor: '#6c757d',
@@ -429,6 +566,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#666'
+  },
+  loadingSubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
   },
   errorContainer: {
     flex: 1,

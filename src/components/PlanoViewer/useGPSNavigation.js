@@ -1,4 +1,4 @@
-// useGPSNavigation.js - VERSIÓN CORREGIDA PARA PLANOS MULTICARRERA
+// useGPSNavigation.js - VERSIÓN COMPLETA CON FUNCIÓN setDestinoYCalcularRuta
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { geometryUtils } from './geometry';
@@ -311,7 +311,6 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
   // 🔥 NUEVO: Función para establecer destino y calcular ruta en una sola operación
   const setDestinoYCalcularRuta = useCallback(async (nuevoDestino) => {
     setDestino(nuevoDestino);
-    // Usar setTimeout para asegurar que el estado se actualice, o mejor aún, pasar el destino directamente
     await calcularRuta(nuevoDestino, origen);
   }, [calcularRuta, origen]);
 
@@ -443,6 +442,7 @@ export const useGPSNavigation = (areas = [], points = [], planos = []) => {
     setOrigen,
     setDestino,
     calcularRuta,
+    // 🔥 NUEVO: Función para establecer destino y calcular ruta automáticamente
     setDestinoYCalcularRuta,
     limpiarRuta,
     graphConnections: generateGraphConnections(),
