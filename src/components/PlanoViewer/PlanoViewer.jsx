@@ -357,14 +357,6 @@ const PlanoViewer = ({ navigation, route }) => {
   const renderDestinoInfo = () => {
     if (!aulaDestino || !materiaNombre) return null;
 
-    return (
-      <View style={styles.destinoInfoContainer}>
-        <Text style={styles.destinoInfoTitle}>🎯 Destino Actual</Text>
-        <Text style={styles.destinoInfoText}>Aula: {aulaDestino}</Text>
-        <Text style={styles.destinoInfoText}>Materia: {materiaNombre}</Text>
-        {carrera && <Text style={styles.destinoInfoText}>Carrera: {carrera}</Text>}
-      </View>
-    );
   };
 
   if (mapData.loading) {

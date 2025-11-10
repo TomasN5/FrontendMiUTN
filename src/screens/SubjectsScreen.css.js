@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   emailIconContainer: {
     position: 'absolute',
-    bottom: 10,
+    bottom: 20,
     right: 10,
     padding: 8,
     borderRadius: 20,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   },
   locationIconContainer: {
     position: 'absolute',
-    bottom: 65, // Colocado arriba del email
+    bottom: 75, // Colocado arriba del email
     right: 10,
     padding: 8,
     borderRadius: 20,

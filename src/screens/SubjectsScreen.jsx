@@ -169,6 +169,16 @@ const SubjectsScreen = ({ navigation }) => {
     return carrera ? carrera.nombre : 'Seleccionar carrera';
   };
 
+  // 🔥 NUEVO: Colores por carrera para aplicar a botones
+  const carreraColors = {
+    1: { bg: '#E6F0FA', border: '#1E90FF' }, // Sistemas (azules)
+    2: { bg: '#F3E6FF', border: '#8A2BE2' }, // Química (violetas)
+    3: { bg: '#E6F9E6', border: '#228B22' }, // Civil (verdes)
+    4: { bg: '#E6F9F6', border: '#20B2AA' }, // Mecánica (celeste verdoso)
+    5: { bg: '#FFF5E6', border: '#FF8C00' }, // Industrial (naranjas)
+    6: { bg: '#FDECEC', border: '#B22222' }, // Eléctrica (rojos)
+  };
+
   const goToHome = () => {
     clearInactivityTimer();
     navigation.navigate('Home');
@@ -417,16 +427,8 @@ const SubjectsScreen = ({ navigation }) => {
           <View style={styles.framesSection}>
             <Text style={styles.sectionTitle}>Materias</Text>
             {materias.map((materia, index) => {
-              const carreraColors = {
-                1: { bg: '#E6F0FA', border: '#1E90FF' }, // Sistemas (azules)
-                2: { bg: '#F3E6FF', border: '#8A2BE2' }, // Química (violetas)
-                3: { bg: '#E6F9E6', border: '#228B22' }, // Civil (verdes)
-                4: { bg: '#E6F9F6', border: '#20B2AA' }, // Mecánica (celeste verdoso)
-                5: { bg: '#FFF5E6', border: '#FF8C00' }, // Industrial (naranjas)
-                6: { bg: '#FDECEC', border: '#B22222' }, // Eléctrica (rojos)
-              };
-
               const colors = carreraColors[selectedCarrera] || { bg: '#FFFFFF', border: '#000000' };
+              const buttonColor = colors.border || '#006cdfff';
 
               return (
                 <View 
@@ -461,7 +463,10 @@ const SubjectsScreen = ({ navigation }) => {
                     
                     {/* Botón de ubicación con ícono de mapa */}
                     <TouchableOpacity 
-                      style={styles.locationIconContainer} 
+                      style={[
+                        styles.locationIconContainer,
+                        { backgroundColor: buttonColor }
+                      ]} 
                       onPress={() => navigateToClassroom(materia.aula, materia.nombre)}
                     >
                       <Image 
@@ -473,7 +478,10 @@ const SubjectsScreen = ({ navigation }) => {
                     
                     {/* Botón de email (existente) */}
                     <TouchableOpacity 
-                      style={styles.emailIconContainer} 
+                      style={[
+                        styles.emailIconContainer,
+                        { backgroundColor: buttonColor }
+                      ]} 
                       onPress={() => openEmailModal(materia.email)}
                     >
                       <Image 

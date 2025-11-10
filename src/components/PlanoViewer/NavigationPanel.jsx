@@ -366,26 +366,32 @@ const NavigationPanel = ({
                   ]}
                   onPress={() => handleSelectDestino(node.id)}
                 >
-                  <View style={[
-                    styles.destacadoIconContainer,
-                    { backgroundColor: getCardColor(node.tipo) }
-                  ]}>
-                    <Text style={styles.destacadoIcon}>
-                      {ICONS[node.tipo] || '⭐'}
-                    </Text>
+                  <View style={styles.destacadoCardContent}>
+                    <View style={[
+                      styles.destacadoIconContainer,
+                      { backgroundColor: getCardColor(node.tipo) }
+                    ]}>
+                      <Text style={styles.destacadoIcon}>
+                        {ICONS[node.tipo] || '⭐'}
+                      </Text>
+                    </View>
+                    <View style={styles.destacadoTextContainer}>
+                      <Text style={styles.destacadoName} numberOfLines={2}>
+                        {getNombreCorto(node.nombre, node.tipo)}
+                      </Text>
+                      <Text style={styles.destacadoLocation} numberOfLines={1}>
+                        {node.piso || 'Planta Principal'}
+                      </Text>
+                      <View style={styles.destacadoMetaContainer}>
+                        <Text style={styles.destacadoCarrera} numberOfLines={1}>
+                          {getCarreraInfo(node)}
+                        </Text>
+                        <Text style={styles.destacadoTipo} numberOfLines={1}>
+                          {getTipoDisplayName(node.tipo)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                  <Text style={styles.destacadoName} numberOfLines={2}>
-                    {getNombreCorto(node.nombre, node.tipo)}
-                  </Text>
-                  <Text style={styles.destacadoLocation} numberOfLines={1}>
-                    {node.piso || 'Planta Principal'}
-                  </Text>
-                  <Text style={styles.destacadoCarrera} numberOfLines={1}>
-                    {getCarreraInfo(node)}
-                  </Text>
-                  <Text style={styles.destacadoTipo} numberOfLines={1}>
-                    {getTipoDisplayName(node.tipo)}
-                  </Text>
                   {gpsNavigation.destino === node.id && (
                     <View style={styles.selectedBadge}>
                       <Text style={styles.selectedBadgeText}>✓</Text>
@@ -1186,12 +1192,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   destacadosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: 12,
   },
   destacadoCard: {
-    width: (width - 72) / 2,
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
@@ -1209,40 +1214,56 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9FF',
     transform: [{ scale: 1.02 }],
   },
+  destacadoCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   destacadoIconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    alignSelf: 'center',
+    marginRight: 16,
   },
   destacadoIcon: {
-    fontSize: 18,
+    fontSize: 20,
     color: '#FFFFFF',
     fontWeight: '600',
   },
+  destacadoTextContainer: {
+    flex: 1,
+  },
   destacadoName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 6,
-    minHeight: 36,
+    textAlign: 'left',
+    marginBottom: 4,
   },
   destacadoLocation: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 2,
+    textAlign: 'left',
+    marginBottom: 4,
+  },
+  destacadoMetaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   destacadoCarrera: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#007AFF',
     fontWeight: '500',
-    textAlign: 'center',
+    textAlign: 'left',
     fontStyle: 'italic',
+  },
+  destacadoTipo: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+    textAlign: 'left',
   },
   pisoSection: {
     marginBottom: 16,
