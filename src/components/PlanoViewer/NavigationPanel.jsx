@@ -34,7 +34,7 @@ const NavigationPanel = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showOrigenSelector, setShowOrigenSelector] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
-    destacados: true, // 🔥 NUEVO: Sección destacados expandida por defecto
+    destacados: true, // 🔥 MODIFICADO: Sección destacados expandida por defecto
     aulas: false,
     departamentos: false,
     escaleras: false,
@@ -97,9 +97,10 @@ const NavigationPanel = ({
     node.id !== origenFijoLocal
   );
 
-  const getDepartamentos = () => {
+  // 🔥 MODIFICADO: Obtener nodos destacados por el atributo "destacado"
+  const getDestacados = () => {
     return nodosDisponibles.filter(node => 
-      node && node.tipo === 'departamento'
+      node && node.destacado === true // 🔥 CAMBIO: Usar atributo destacado en lugar de solo departamentos
     );
   };
 
@@ -208,7 +209,7 @@ const NavigationPanel = ({
 
   const getNodoInfo = (nodoId) => nodosDisponibles.find(n => n.id === nodoId);
   const destinoInfo = getNodoInfo(gpsNavigation.destino);
-  const departamentos = getDepartamentos();
+  const destacados = getDestacados(); // 🔥 CAMBIO: Usar destacados en lugar de departamentos
   const nodosOrganizados = getNodosOrganizados();
 
   const handleSelectDestino = (nodeId) => {
@@ -319,9 +320,9 @@ const NavigationPanel = ({
     );
   };
 
-  // 🔥 MODIFICADO: Renderizar sección destacados unificada
+  // 🔥 MODIFICADO: Renderizar sección destacados con áreas y puntos destacados
   const renderDestacadosSection = () => {
-    if (departamentos.length === 0) {
+    if (destacados.length === 0) {
       return null;
     }
 
@@ -335,12 +336,12 @@ const NavigationPanel = ({
           onPress={() => toggleSection('destacados')}
         >
           <View style={styles.categoriaTitleContainer}>
-            <View style={[styles.categoriaIconContainer, { backgroundColor: '#2196F3' }]}>
-              <Text style={styles.categoriaIcon}>🏛️</Text>
+            <View style={[styles.categoriaIconContainer, { backgroundColor: '#FFD700' }]}>
+              <Text style={styles.categoriaIcon}>⭐</Text>
             </View>
             <View style={styles.categoriaTextContainer}>
-              <Text style={styles.categoriaTitle}>Departamentos Destacados</Text>
-              <Text style={styles.categoriaSubtitle}>{departamentos.length} departamentos principales</Text>
+              <Text style={styles.categoriaTitle}>Destacados</Text>
+              <Text style={styles.categoriaSubtitle}>{destacados.length} elementos destacados</Text>
             </View>
           </View>
           <View style={[
@@ -356,7 +357,7 @@ const NavigationPanel = ({
         {expandedSections.destacados && (
           <View style={styles.categoriaContent}>
             <View style={styles.destacadosGrid}>
-              {departamentos.map((node, index) => (
+              {destacados.map((node, index) => (
                 <TouchableOpacity
                   key={node.id}
                   style={[
@@ -370,7 +371,7 @@ const NavigationPanel = ({
                     { backgroundColor: getCardColor(node.tipo) }
                   ]}>
                     <Text style={styles.destacadoIcon}>
-                      {ICONS[node.tipo] || '🏛️'}
+                      {ICONS[node.tipo] || '⭐'}
                     </Text>
                   </View>
                   <Text style={styles.destacadoName} numberOfLines={2}>
@@ -381,6 +382,9 @@ const NavigationPanel = ({
                   </Text>
                   <Text style={styles.destacadoCarrera} numberOfLines={1}>
                     {getCarreraInfo(node)}
+                  </Text>
+                  <Text style={styles.destacadoTipo} numberOfLines={1}>
+                    {getTipoDisplayName(node.tipo)}
                   </Text>
                   {gpsNavigation.destino === node.id && (
                     <View style={styles.selectedBadge}>
@@ -494,7 +498,7 @@ const NavigationPanel = ({
 
     return (
       <View style={styles.todasLasSecciones}>
-        {/* 🔥 DESTACADOS PRIMERO */}
+        {/* 🔥 DESTACADOS PRIMERO - Ahora muestra todos los nodos con atributo destacado */}
         {renderDestacadosSection()}
         
         {/* 🔥 TODAS LAS OTRAS CATEGORÍAS DESPUÉS */}
@@ -592,8 +596,6 @@ const NavigationPanel = ({
           <Text style={styles.closeButtonIcon}>✕</Text>
         </TouchableOpacity>
       </View>
-
-      {/* 🔥 ELIMINADO: Tabs container */}
 
       <ScrollView 
         style={styles.content} 
@@ -763,6 +765,25 @@ const NavigationPanel = ({
       </Modal>
     </Animated.View>
   );
+};
+
+// 🔥 NUEVA FUNCIÓN: Obtener nombre display para el tipo
+const getTipoDisplayName = (tipo) => {
+  const tipoNombres = {
+    'aula': 'Aula',
+    'departamento': 'Departamento',
+    'escalera': 'Escalera',
+    'bano': 'Baño',
+    'hall': 'Hall',
+    'area_generica': 'Área',
+    'extintor': 'Extintor',
+    'salida_emergencia': 'Salida',
+    'botiquin': 'Botiquín',
+    'desfibrilador': 'Desfibrilador',
+    'alarma': 'Alarma',
+    'totem': 'Tótem'
+  };
+  return tipoNombres[tipo] || tipo;
 };
 
 // FUNCIONES AUXILIARES (mantener igual)

@@ -1,4 +1,4 @@
-// PlanoViewer.jsx - VERSIÓN COMPLETA ACTUALIZADA PARA RECIBIR PARÁMETROS
+// PlanoViewer.jsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -30,9 +30,17 @@ const PlanoViewer = ({ navigation, route }) => {
   const [origenFijo, setOrigenFijo] = useState(null);
   const [showContinuarButton, setShowContinuarButton] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  
+  // 🔥 NUEVO: Referencia para controlar el zoom desde el padre
+  const [resetZoomTrigger, setResetZoomTrigger] = useState(0);
 
-  // 🔥 NUEVO: Obtener parámetros de navegación
+  // 🔥 CORREGIDO: Obtener parámetros de navegación correctamente
   const { aulaDestino, materiaNombre, carrera } = route.params || {};
+
+  // 🔥 NUEVO: Función para resetear el zoom
+  const handleResetZoom = () => {
+    setResetZoomTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     planoManager.inicializarPlanosCarrera('general');
@@ -71,12 +79,12 @@ const PlanoViewer = ({ navigation, route }) => {
     }
   }, [gpsNavigation.mostrarContinuar, gpsNavigation.getInfoSegmentoActual, planoManager]);
 
-  // 🔥 NUEVO: Buscar automáticamente el aula destino cuando lleguen los parámetros
+  // 🔥 CORREGIDO: Buscar automáticamente el aula destino cuando lleguen los parámetros
   useEffect(() => {
     if (aulaDestino && mapData.getAllNodes && !mapData.loading && origenFijo) {
       buscarAulaYCalcularRuta(aulaDestino, materiaNombre);
     }
-  }, [aulaDestino, mapData.getAllNodes, mapData.loading, origenFijo]);
+  }, [aulaDestino, mapData.getAllNodes, mapData.loading, origenFijo, materiaNombre]);
 
   // 🔥 NUEVO: Mostrar/ocultar botón continuar
   useEffect(() => {
@@ -267,7 +275,7 @@ const PlanoViewer = ({ navigation, route }) => {
     setShowControlPanel(!showControlPanel);
   };
 
-  // 🔥 CORREGIDO: Manejar clic en botón continuar con cambio de carrera
+  // 🔥 CORREGIDO: Manejar clic en botón continuar con cambio de carrera Y RESETEO DE ZOOM
   const handleContinuar = () => {
     const siguienteSegmento = gpsNavigation.avanzarSiguienteSegmento();
     if (siguienteSegmento && siguienteSegmento.planoId) {
@@ -277,6 +285,9 @@ const PlanoViewer = ({ navigation, route }) => {
         segmento: siguienteSegmento.index + 1,
         total: siguienteSegmento.total
       });
+      
+      // 🔥 NUEVO: Resetear el zoom antes de cambiar de plano
+      handleResetZoom();
       
       // 🔥 MODIFICADO: Cambiar a la carrera correcta si es necesario
       const carreraRequerida = siguienteSegmento.planoInfo?.carrera;
@@ -407,7 +418,7 @@ const PlanoViewer = ({ navigation, route }) => {
         <StatusBar barStyle="dark-content" />
         
         {/* 🔥 NUEVO: Información del destino */}
-   
+        {renderDestinoInfo()}
         
         <PlanoMap
           plano={planoManager.planoActual}
@@ -438,6 +449,8 @@ const PlanoViewer = ({ navigation, route }) => {
               planoManager.inicializarPlanosCarrera('general');
             }
           }}
+          // 🔥 NUEVO: Pasar la prop para resetear zoom
+          resetZoomTrigger={resetZoomTrigger}
         />
         
         {/* 🔥 MEJORADO: Botón Continuar con información de carrera */}

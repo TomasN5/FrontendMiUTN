@@ -1,3 +1,4 @@
+// PlanoMap.jsx - AGREGAR RESET DE ZOOM EXTERNO
 import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
@@ -30,7 +31,9 @@ const PlanoMap = ({
   onStartNavigation,
   rutaCompleta = [],
   segmentosRuta = [],
-  onCancelarViaje
+  onCancelarViaje,
+  // 🔥 NUEVO: Prop para resetear zoom externamente
+  resetZoomTrigger = 0
 }) => {
   const { 
     adaptNode, 
@@ -52,6 +55,14 @@ const PlanoMap = ({
   } = useZoomPan();
 
   const [showZoomControls, setShowZoomControls] = useState(true);
+
+  // 🔥 NUEVO: Efecto para reaccionar al trigger de reset de zoom
+  useEffect(() => {
+    if (resetZoomTrigger > 0) {
+      console.log('🔄 Reseteando zoom por trigger externo');
+      reset();
+    }
+  }, [resetZoomTrigger, reset]);
 
   // 🔥 NUEVO: Efecto para manejar cambios de plano automáticos durante navegación
   useEffect(() => {
