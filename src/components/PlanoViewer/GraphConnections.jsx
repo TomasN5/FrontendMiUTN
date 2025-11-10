@@ -1,4 +1,4 @@
-// GraphConnections.jsx - VERSIÓN CON PUNTOS MÁS PEQUEÑOS
+// GraphConnections.jsx - VERSIÓN CON ANIMACIÓN MEJORADA
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 
@@ -13,6 +13,8 @@ const GraphConnections = ({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pathProgress = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const movingDotProgress = useRef(new Animated.Value(0)).current;
+  const waveAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Animación de entrada
@@ -22,21 +24,48 @@ const GraphConnections = ({
       useNativeDriver: true,
     }).start();
 
-    // Animación de progreso para la ruta
+    // Animación de progreso para la ruta (más rápida para líneas)
     if (rutaActual.length > 0) {
       pathProgress.setValue(0);
+      movingDotProgress.setValue(0);
+      waveAnim.setValue(0);
+      
+      // Animación de líneas que se dibujan
       Animated.timing(pathProgress, {
         toValue: 1,
-        duration: 1500,
+        duration: 2000,
         useNativeDriver: false,
       }).start();
+
+      // Animación del punto móvil (más lenta para que sea visible)
+      Animated.timing(movingDotProgress, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: false,
+      }).start();
+
+      // Animación de ondas continuas desde el punto móvil
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(waveAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: false,
+          }),
+          Animated.timing(waveAnim, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+          })
+        ])
+      ).start();
     }
 
     // Animación de pulso para nodos importantes
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.1, // 🔥 REDUCIDO: Pulso más sutil
+          toValue: 1.2,
           duration: 1000,
           useNativeDriver: true,
         }),
@@ -75,7 +104,115 @@ const GraphConnections = ({
     return specialTypes.includes(node.tipo);
   };
 
-  const renderRouteDots = () => {
+  // 🔥 NUEVO: Renderizar punto móvil simplificado
+  const renderMovingDot = () => {
+    if (rutaActual.length < 2 || !showRoute) return null;
+
+    const nodes = rutaActual.filter(node => node && nodeBelongsToCurrentPlano(node));
+    if (nodes.length < 2) return null;
+
+    // Obtener coordenadas de todos los nodos
+    const coordinates = nodes
+      .map(node => getNodeCoordinates(node))
+      .filter(coord => coord !== null);
+
+    if (coordinates.length < 2) return null;
+
+    // Crear interpolaciones para cada segmento
+    const segments = [];
+    for (let i = 0; i < coordinates.length - 1; i++) {
+      const fromCoord = coordinates[i];
+      const toCoord = coordinates[i + 1];
+      const segmentStart = i / (coordinates.length - 1);
+      const segmentEnd = (i + 1) / (coordinates.length - 1);
+      
+      segments.push({
+        start: segmentStart,
+        end: segmentEnd,
+        from: fromCoord,
+        to: toCoord,
+      });
+    }
+
+    const waveOpacity = waveAnim.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0.8, 0.4, 0]
+    });
+
+    // Renderizar un punto móvil por segmento (solo el activo será visible)
+    return segments.map((segment, idx) => {
+      return (
+        <Animated.View
+          key={`moving-dot-${idx}`}
+          style={[
+            styles.movingDotContainer,
+            {
+              left: movingDotProgress.interpolate({
+                inputRange: [segment.start, segment.end],
+                outputRange: [segment.from.x - 12, segment.to.x - 12]
+              }),
+              top: movingDotProgress.interpolate({
+                inputRange: [segment.start, segment.end],
+                outputRange: [segment.from.y - 12, segment.to.y - 12]
+              }),
+              opacity: movingDotProgress.interpolate({
+                inputRange: [
+                  Math.max(0, segment.start - 0.05),
+                  segment.start,
+                  segment.end,
+                  Math.min(1, segment.end + 0.05)
+                ],
+                outputRange: [0, 1, 1, 0]
+              })
+            }
+          ]}
+        >
+          {/* Ondas de expansión */}
+          <Animated.View
+            style={[
+              styles.wave,
+              {
+                transform: [
+                  {
+                    scale: waveAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 2.5]
+                    })
+                  }
+                ],
+                opacity: waveOpacity,
+              }
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.wave,
+              {
+                transform: [
+                  {
+                    scale: waveAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.6, 2.0]
+                    })
+                  }
+                ],
+                opacity: waveAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.5, 0.3, 0]
+                }),
+              }
+            ]}
+          />
+          {/* Punto móvil principal */}
+          <View style={styles.movingDot} />
+          <View style={styles.movingDotInner} />
+        </Animated.View>
+      );
+    });
+  };
+
+  // 🔥 NUEVO: Renderizar puntos de ruta animados (más simple y funcional)
+  const renderAnimatedLines = () => {
     if (rutaActual.length < 2 || !showRoute) return null;
 
     const routeDots = [];
@@ -88,35 +225,34 @@ const GraphConnections = ({
       if (!coords) continue;
 
       const isIntermediate = i > 0 && i < rutaActual.length - 1;
+      const isSpecial = isSpecialNode(node);
       
-      if (isIntermediate) {
-        const isSpecial = isSpecialNode(node);
+      // Solo mostrar puntos intermedios que no sean especiales
+      if (isIntermediate && !isSpecial) {
+        const progressThreshold = i / rutaActual.length;
         
-        if (!isSpecial) {
-          const progressThreshold = i / rutaActual.length;
-          
-          routeDots.push(
-            <Animated.View
-              key={`route-dot-${i}`}
-              style={[
-                styles.routeDot,
-                {
-                  left: coords.x - 3, // 🔥 REDUCIDO: Ajuste de posición
-                  top: coords.y - 3, // 🔥 REDUCIDO: Ajuste de posición
-                  opacity: pathProgress.interpolate({
-                    inputRange: [0, progressThreshold, Math.min(progressThreshold + 0.1, 1)],
-                    outputRange: [0, 0, 1]
-                  })
-                }
-              ]}
-            />
-          );
-        }
+        routeDots.push(
+          <Animated.View
+            key={`route-dot-${i}`}
+            style={[
+              styles.routeDot,
+              {
+                left: coords.x - 4,
+                top: coords.y - 4,
+                opacity: pathProgress.interpolate({
+                  inputRange: [0, progressThreshold, Math.min(progressThreshold + 0.1, 1)],
+                  outputRange: [0, 0, 1]
+                })
+              }
+            ]}
+          />
+        );
       }
     }
 
     return routeDots;
   };
+
 
   const renderSpecialNodes = () => {
     if (rutaActual.length === 0) return null;
@@ -174,18 +310,23 @@ const GraphConnections = ({
     return specialNodes;
   };
 
-  const routeDots = renderRouteDots();
+  const animatedLines = renderAnimatedLines();
+  const movingDot = renderMovingDot();
   const specialNodes = renderSpecialNodes();
 
-  if ((!routeDots || routeDots.length === 0) && 
-      (!specialNodes || specialNodes.length === 0)) {
+  const hasLines = animatedLines && animatedLines.length > 0;
+  const hasMovingDot = movingDot && (Array.isArray(movingDot) ? movingDot.length > 0 : true);
+  const hasSpecialNodes = specialNodes && specialNodes.length > 0;
+
+  if (!hasLines && !hasMovingDot && !hasSpecialNodes) {
     return null;
   }
 
   return (
     <View style={styles.container} pointerEvents="none">
-      {routeDots}
-      {specialNodes}
+      {hasLines && animatedLines}
+      {hasMovingDot && movingDot}
+      {hasSpecialNodes && specialNodes}
     </View>
   );
 };
@@ -200,21 +341,61 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 8,
   },
-  // 🔥 PUNTOS AZULES DE LA RUTA (más pequeños)
+  // 🔥 PUNTOS DE RUTA ANIMADOS
   routeDot: {
     position: 'absolute',
-    width: 6, // 🔥 REDUCIDO: Punto más pequeño
-    height: 6, // 🔥 REDUCIDO: Punto más pequeño
-    borderRadius: 3, // 🔥 REDUCIDO: Borde más pequeño
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#007AFF',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'white',
     zIndex: 11,
     shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6, // 🔥 REDUCIDO: Sombra más sutil
-    shadowRadius: 1.5, // 🔥 REDUCIDO: Sombra más sutil
-    elevation: 2, // 🔥 REDUCIDO: Elevación más sutil
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  // 🔥 PUNTO MÓVIL CON ONDAS
+  movingDotContainer: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 13,
+  },
+  wave: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    backgroundColor: 'transparent',
+  },
+  movingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#007AFF',
+    borderWidth: 2,
+    borderColor: 'white',
+    zIndex: 15,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  movingDotInner: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'white',
+    zIndex: 16,
   },
   // 🔥 PUNTOS ESPECIALES ANIMADOS (más pequeños)
   origenNode: {
