@@ -23,21 +23,35 @@ const sliderItemStyles = StyleSheet.create({
     position: 'relative',
     borderWidth: 0, // Por defecto sin borde
   },
-  // Estilo para items importantes - SOLO el marco rojo
+  // Estilo para items importantes - Diseño destacado
   importantItem: {
-    borderWidth: 3,
-    borderColor: COLORS.danger,
+    backgroundColor: '#fff5f5', // Fondo rosa muy suave para resaltar
+    borderWidth: 4,
+    borderColor: '#e53e3e', // Borde rojo más grueso
+    shadowColor: '#e53e3e', // Sombra con color rojo
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.4, // Sombra más pronunciada
+    shadowRadius: 4,
+    elevation: 10, // Elevación mayor en Android
   },
   sliderContent: {
     flex: 1,
     justifyContent: 'center',
   },
   sliderItemTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 10,
     color: COLORS.primary,
     textAlign: 'center',
+  },
+  // Estilos para título de items importantes
+  importantTitle: {
+    color: '#c53030', // Color rojo oscuro para el título
+    fontSize: 26, // Título ligeramente más grande
   },
   sliderItemDescription: {
     fontSize: 16,
@@ -45,34 +59,44 @@ const sliderItemStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  // Badge de importancia con estilo de botón
+  // Estilos para descripción de items importantes
+  importantDescription: {
+    fontSize: 16, // Color más oscuro para mejor legibilidad
+    fontWeight: '500', // Texto ligeramente más bold
+  },
+  // Badge de importancia con estilo de botón mejorado
   importantBadge: {
     position: 'absolute',
-    top: 12,
-    right: 10,
-    backgroundColor: '#e53e3e', // Fondo blanco como un botón
+    top: 16, // Posición desde arriba
+    right: 20, // Posición desde la derecha
+    zIndex: 10, // Asegurar que esté por encima
+  },
+  importantBadgeContainer: {
+    backgroundColor: '#e53e3e', // Fondo rojo
     borderWidth: 2,
-    borderColor: '#e53e3e',
+    borderColor: '#c53030', // Borde rojo más oscuro
     borderRadius: 20, // Bordes más redondeados
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    shadowColor: '#000',
+    paddingLeft: 16, // Más padding a la izquierda para mover el texto a la derecha
+    paddingRight: 12,
+    paddingVertical: 5,
+    shadowColor: '#e53e3e',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 4,
-    minWidth: 80, // Ancho mínimo para que se vea como botón
+    shadowOpacity: 0.4, // Sombra más pronunciada
+    shadowRadius: 4,
+    elevation: 6, // Mayor elevación
+    minWidth: 80, // Ancho mínimo reducido
     alignItems: 'center',
     justifyContent: 'center',
   },
   importantBadgeText: {
-    color: '#ffffffff', // Texto rojo para contrastar con fondo blanco
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#ffffff', // Texto blanco
+    fontSize: 11,
+    fontWeight: '700', // Más bold
     letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });
 

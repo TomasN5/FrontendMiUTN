@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen';
 import SubjectsScreen from './src/screens/SubjectsScreen';
+import PlanoViewer from './src/components/PlanoViewer/PlanoViewer';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,10 @@ const App = () => {
         <Stack.Screen 
           name="Subjects" 
           component={SubjectsScreen}
+        />
+        <Stack.Screen 
+          name="PlanoViewer" 
+          component={PlanoViewer} // Agregar esta línea
         />
       </Stack.Navigator>
     </NavigationContainer>

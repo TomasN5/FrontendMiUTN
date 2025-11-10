@@ -31,7 +31,7 @@ const AnnouncementModal = ({
   const [imageError, setImageError] = useState(false);
   
   // URL base de la API
-  const API_BASE_URL = 'https://8d13dfce1445.ngrok-free.app/api/v1/miUTN';
+  const API_BASE_URL = 'https://e13217bbfd70.ngrok-free.app/api/v1/miUTN';
 
   // Función para descargar imagen desde el endpoint
   const downloadImage = async (imagePath) => {
@@ -42,7 +42,7 @@ const AnnouncementModal = ({
       setImageError(false);
       
       const downloadUrl = `${API_BASE_URL}/publication/download?path=${encodeURIComponent(imagePath)}`;
-      console.log('Descargando imagen desde:', downloadUrl);
+     
       
       // Verificar que la URL es válida
       const response = await fetch(downloadUrl, {
@@ -59,7 +59,7 @@ const AnnouncementModal = ({
       // Si la respuesta es exitosa, usar la URL de descarga
       return downloadUrl;
     } catch (error) {
-      console.error('Error descargando imagen:', error);
+     
       setImageError(true);
       return null;
     } finally {
@@ -162,8 +162,9 @@ const AnnouncementModal = ({
             {/* Contenido scrollable */}
             <ScrollView 
               style={styles.content}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               contentContainerStyle={styles.scrollContent}
+              nestedScrollEnabled={true}
             >
               
               {/* Contenido del anuncio con imagen y texto */}
@@ -201,14 +202,16 @@ const AnnouncementModal = ({
                         </TouchableOpacity>
                       </View>
                     ) : (
-                      <Image 
-                        source={{ 
-                          uri: imageUrl || announcement.imageUrl || 'https://via.placeholder.com/300x200' 
-                        }}
-                        style={styles.announcementImage}
-                        resizeMode="cover"
-                        onError={() => setImageError(true)}
-                      />
+                      <View style={styles.imageContainer}>
+                        <Image 
+                          source={{ 
+                            uri: imageUrl || announcement.imageUrl || 'https://via.placeholder.com/300x200' 
+                          }}
+                          style={styles.announcementImage}
+                          resizeMode="cover"
+                          onError={() => setImageError(true)}
+                        />
+                      </View>
                     )}
                   </View>
                 )}

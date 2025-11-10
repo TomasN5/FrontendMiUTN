@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    overflow: 'hidden',
+    overflow: 'visible',
     shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
@@ -38,6 +38,9 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -86,6 +89,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    overflow: 'hidden',
   },
   scrollContent: {
     flexGrow: 1,
@@ -93,26 +97,35 @@ const styles = StyleSheet.create({
   },
   /* Estilos para contenido del anuncio */
   announcementContent: {
-    flex: 1,
     padding: 24,
+    paddingBottom: 28,
   },
   /* Estilos para sección de imagen */
   imageSection: {
     marginVertical: 20,
     alignItems: 'center',
+    marginHorizontal: 0,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
-  announcementImage: {
+  imageContainer: {
     width: '100%',
-    height: 200,
     borderRadius: 12,
     shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 7,
+    elevation: 5,
+    backgroundColor: COLORS.white,
+  },
+  announcementImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   titleSection: {
     marginBottom: 24,
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
   },
   /* Estilos para descripción */
   descriptionSection: {
-    flex: 1,
+    marginTop: 8,
   },
   fullDescriptionText: {
     fontSize: 17,
